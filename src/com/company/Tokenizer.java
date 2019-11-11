@@ -13,7 +13,6 @@ public class Tokenizer implements ITokenizer {
         tokenDictionary.put("{","block");
         tokenDictionary.put("}","block");
 
-
         //id
         tokenDictionary.put("a","id");
         tokenDictionary.put("b","id");
@@ -63,6 +62,7 @@ public class Tokenizer implements ITokenizer {
 
     @Override
     public void open(String fileName) throws IOException, TokenizerException {
+
 
     }
 
