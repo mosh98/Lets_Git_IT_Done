@@ -14,14 +14,14 @@ public class Tokenizer implements ITokenizer {
 
     //All datasets
   private HashMap<Character,Token> operators = new HashMap<>();
-  private HashSet<Integer> int_Set = new HashSet<>();
+
+
+  //private HashSet<Integer> int_Set = new HashSet<>();
   private HashSet<Character> id_Set = new HashSet<>();
 
   //Constructor
     public Tokenizer() {
-        for (int i =0; i<10; i++){
-            int_Set.add(i);
-        }
+
 
         id_Set.add('a');
         id_Set.add('b');
@@ -50,9 +50,18 @@ public class Tokenizer implements ITokenizer {
         id_Set.add('y');
         id_Set.add('z');
 
-
         //adding operators with their tokens
-        operators.put()
+
+        operators.put('=',Token.ASSIGN_OP);
+        operators.put('/',Token.DIV_OP);
+        operators.put('*',Token.MULT_OP);
+        operators.put('-',Token.SUB_OP);
+        operators.put('(',Token.LEFT_PAREN);
+        operators.put(')',Token.RIGHT_PAREN);
+        operators.put('{',Token.LEFT_CURLY);
+        operators.put('}',Token.RIGHT_CURLY);
+        operators.put(';',Token.SEMICOLON);
+        operators.put('+',Token.ADD_OP);
 
     }
 
@@ -67,14 +76,11 @@ public class Tokenizer implements ITokenizer {
         next = extractLexeme();
 
     }
-
     private void consumeWhiteSpaces() throws IOException {
         while (Character.isWhitespace(scanner.current())){
             scanner.moveNext();
         }
     }
-
-
     /**
      * Returns the current token in the stream.
      */
@@ -93,12 +99,45 @@ public class Tokenizer implements ITokenizer {
     }
 
 
-    private Lexeme extractLexeme() throws IOException, TokenizerException{
+    private Lexeme extractLexeme() throws IOException, TokenizerException {
 
+        consumeWhiteSpaces();
 
-        return null;
+        Character ch = scanner.current();
+        StringBuilder strBuilder = new StringBuilder();
+        String lexemeString;
+
+        if (ch == Scanner.EOF)
+            return new Lexeme(ch, Token.EOF);//checks if the it is end of file or empty then it just stops.
+
+        else if (Character.isDigit(ch)) {
+            while (Character.isDigit(scanner.current())) {
+                strBuilder.append(scanner.current());
+                scanner.moveNext();
+            }
+            lexemeString = strBuilder.toString();
+            return new Lexeme(lexemeString, Token.INT_LIT);
+
+        } else if (Character.isLetter(ch)) {
+            while (Character.isLetter(scanner.current())) {
+                strBuilder.append(scanner.current());
+                scanner.moveNext();
+            }
+            lexemeString = strBuilder.toString();
+            return new Lexeme(lexemeString, Token.IDENT);
+
+        } else if (operators.containsKey(ch)) {
+            scanner.moveNext();
+                return new Lexeme(ch,operators.get(ch));
+        } else {
+            throw new TokenizerException("Unknown character: " + String.valueOf(ch));
+        }
+
     }
 
+    /**
+     * Closes the file and releases any system resources associated with it.
+     */
     @Override
     public void close() throws IOException {
         if (scanner != null)
