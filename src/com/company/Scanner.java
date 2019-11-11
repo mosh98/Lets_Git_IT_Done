@@ -23,6 +23,9 @@ public class Scanner implements IScanner {
 		stream = new FileInputStream(fileName);
 		reader = new InputStreamReader(stream);
 	}
+
+
+
 		
 	public char current() {
 		return current;

@@ -8,7 +8,7 @@ public class Program {
 		String inputFileName = null;
 		String outputFileName = null;
 		IParser parser = null;
-		INode root = null; // Root of the parse tree.
+		INode root = null; 			// Root of the parse tree.
 		StringBuilder builder = null;
 		FileOutputStream stream = null;
 		OutputStreamWriter writer = null;
@@ -36,6 +36,7 @@ public class Program {
 			catch (Exception exception) {
 				System.out.println("EXCEPTION: " + exception);
 			}
+
 			finally {
 				if (parser != null)
 					parser.close();
