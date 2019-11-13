@@ -16,39 +16,11 @@ public class Tokenizer implements ITokenizer {
   private HashMap<Character,Token> operators = new HashMap<>();
 
 
-  //private HashSet<Integer> int_Set = new HashSet<>();
-  private HashSet<Character> id_Set = new HashSet<>();
+
 
   //Constructor
     public Tokenizer() {
 
-
-        id_Set.add('a');
-        id_Set.add('b');
-        id_Set.add('c');
-        id_Set.add('d');
-        id_Set.add('e');
-        id_Set.add('f');
-        id_Set.add('g');
-        id_Set.add('h');
-        id_Set.add('i');
-        id_Set.add('j');
-        id_Set.add('k');
-        id_Set.add('l');
-        id_Set.add('m');
-        id_Set.add('n');
-        id_Set.add('o');
-        id_Set.add('p');
-        id_Set.add('q');
-        id_Set.add('r');
-        id_Set.add('s');
-        id_Set.add('t');
-        id_Set.add('u');
-        id_Set.add('v');
-        id_Set.add('w');
-        id_Set.add('x');
-        id_Set.add('y');
-        id_Set.add('z');
 
         //adding operators with their tokens
 
@@ -86,7 +58,7 @@ public class Tokenizer implements ITokenizer {
      */
     @Override
     public Lexeme current() {
-        return null;
+        return current;
     }
 
 
@@ -95,7 +67,11 @@ public class Tokenizer implements ITokenizer {
      */
     @Override
     public void moveNext() throws IOException, TokenizerException {
-
+        if (scanner == null)
+            throw new IOException("No open file.");
+        current = next;
+        if (next.token() != Token.EOF)
+            next = extractLexeme();
     }
 
 
@@ -106,6 +82,9 @@ public class Tokenizer implements ITokenizer {
         Character ch = scanner.current();
         StringBuilder strBuilder = new StringBuilder();
         String lexemeString;
+
+        if(ch == null)
+            return new Lexeme(ch,Token.NULL);
 
         if (ch == Scanner.EOF)
             return new Lexeme(ch, Token.EOF);//checks if the it is end of file or empty then it just stops.
@@ -130,7 +109,7 @@ public class Tokenizer implements ITokenizer {
             scanner.moveNext();
                 return new Lexeme(ch,operators.get(ch));
         } else {
-            throw new TokenizerException("Unknown character: " + String.valueOf(ch));
+            throw new TokenizerException("Unknown character: " + ch);
         }
 
     }
@@ -138,6 +117,7 @@ public class Tokenizer implements ITokenizer {
     /**
      * Closes the file and releases any system resources associated with it.
      */
+
     @Override
     public void close() throws IOException {
         if (scanner != null)
