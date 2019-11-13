@@ -1,17 +1,22 @@
 package com.company;
 
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 
 public class Program {
-	public static void main(String[] args) {
-		String inputFileName = "program1.txt";
+	public static void main(String[] args) throws IOException {
+		String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program1.txt";
 		String outputFileName;
-		IParser parser = null;
-		INode root = null; 			// Root of the parse tree.
+		IParser parser = new Parser();
+
+		INode root = null;		// Root of the parse tree.
 		StringBuilder builder = null;
 		FileOutputStream stream = null;
-		OutputStreamWriter writer = null;
+		try {
+			stream = new FileOutputStream("/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		OutputStreamWriter writer = new OutputStreamWriter(stream,"UTF-8");
 		
 		try {
 			try {
@@ -22,6 +27,7 @@ public class Program {
 				
 				parser = new Parser();
 				parser.open(inputFileName);
+
 				root = parser.parse();
 				builder = new StringBuilder();
 				builder.append("PARSE TREE:\n");

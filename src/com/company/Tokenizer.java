@@ -21,7 +21,6 @@ public class Tokenizer implements ITokenizer {
   //Constructor
     public Tokenizer() {
 
-
         //adding operators with their tokens
 
         operators.put('=',Token.ASSIGN_OP);
@@ -54,7 +53,7 @@ public class Tokenizer implements ITokenizer {
         }
     }
     /**
-     * Returns the current token in the stream.
+     * @Returns the current token in the stream.
      */
     @Override
     public Lexeme current() {
@@ -74,6 +73,12 @@ public class Tokenizer implements ITokenizer {
             next = extractLexeme();
     }
 
+    /**
+     *
+     * @return returns Lexemes with their designated Tokens
+     * @throws IOException
+     * @throws TokenizerException
+     */
 
     private Lexeme extractLexeme() throws IOException, TokenizerException {
 

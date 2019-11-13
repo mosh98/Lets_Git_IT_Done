@@ -4,10 +4,16 @@ import java.io.IOException;
 
 public class Parser implements IParser {
 
-    Tokenizer tokenizer = null;
+    public Tokenizer tokenizer = null;
 
-    StringBuilder stringBuilder = null;
+    public StringBuilder stringBuilder = null;
 
+
+    public void add_indents(int tabs){
+        for(int i =0; i <tabs; i++){
+            stringBuilder.append(" ");
+        }
+    }
 
     @Override
     public void open(String fileName) throws IOException, TokenizerException {
@@ -22,7 +28,7 @@ public class Parser implements IParser {
     public INode parse() throws IOException, TokenizerException, ParserException {
         if (tokenizer == null)
             throw new IOException("No open file.");
-        return new BlockNode(tokenizer);
+        return new AssignmentNode(tokenizer);
     }
 
     @Override
@@ -54,8 +60,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-            String s = String.format("%1$"+tabs+"s", "");
-            stringBuilder.append(builder +s +"\n");
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
         }
     }
 
@@ -67,7 +73,12 @@ public class Parser implements IParser {
 
 
         public StatementNode(Tokenizer P_Tokenizer) {
-            assignmentNode = new AssignmentNode(P_Tokenizer);
+
+            /***
+             * go through the string and find the = symbol
+             *if found move next and
+             * */
+           // assignmentNode = new AssignmentNode(P_Tokenizer);
             if (P_Tokenizer.current().token() != Token.EOF ){
                 stmt = new StatementNode(P_Tokenizer);
             }
@@ -81,19 +92,26 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
         }
     }
 
 
-    class AssignmentNode implements INode{
+     class AssignmentNode implements INode{
 
         ExpressionNode ex = null;
 
-        public AssignmentNode(Tokenizer P_Tokenizer){
+        public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
+
+       if(P_Tokenizer.current().token() == Token.IDENT){
 
 
+           String lexeme = P_Tokenizer.current().value().toString();
+           stringBuilder.append(P_Tokenizer.current().token() + lexeme);
 
+       }
+            P_Tokenizer.moveNext();
 
         }
 
@@ -104,7 +122,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
 
         }
     }
@@ -122,7 +141,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
         }
     }
     class TermNode implements INode{
@@ -139,7 +159,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
         }
     }
     class FactorNode implements INode{
@@ -154,7 +175,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
+            add_indents(tabs);
+            stringBuilder.append(builder +"\n");
         }
     }
 

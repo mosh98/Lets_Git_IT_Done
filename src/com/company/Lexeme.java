@@ -11,7 +11,7 @@ public class Lexeme {
 	}
 
 	public Object value() {
-		return value;
+		return value.toString();
 	}
 
 	public Token token() {
