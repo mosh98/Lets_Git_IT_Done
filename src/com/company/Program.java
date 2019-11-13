@@ -6,7 +6,7 @@ import java.io.OutputStreamWriter;
 public class Program {
 	public static void main(String[] args) {
 		String inputFileName = "program1.txt";
-		String outputFileName = "test.txt";
+		String outputFileName;
 		IParser parser = null;
 		INode root = null; 			// Root of the parse tree.
 		StringBuilder builder = null;

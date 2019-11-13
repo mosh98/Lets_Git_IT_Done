@@ -52,20 +52,23 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-
             String s = String.format("%1$"+tabs+"s", "");
             stringBuilder.append(builder +s +"\n");
-
         }
     }
 
     class StatementNode implements INode{
 
         AssignmentNode assignmentNode = null;
-        ExpressionNode expressionNode = null;
+       // can go back to Statement node again
+        StatementNode stmt = null;
 
 
         public StatementNode(Tokenizer P_Tokenizer) {
+            assignmentNode = new AssignmentNode(P_Tokenizer);
+            if (P_Tokenizer.current().token() != Token.EOF ){
+                stmt = new StatementNode(P_Tokenizer);
+            }
 
         }
 
@@ -83,8 +86,12 @@ public class Parser implements IParser {
 
     class AssignmentNode implements INode{
 
+        ExpressionNode ex = null;
 
         public AssignmentNode(Tokenizer P_Tokenizer){
+
+
+
 
         }
 
