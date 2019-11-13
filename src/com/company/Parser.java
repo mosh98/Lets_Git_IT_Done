@@ -27,6 +27,8 @@ public class Parser implements IParser {
 
     @Override
     public void close() throws IOException {
+        if (tokenizer != null)
+            tokenizer.close();
     }
 
 
@@ -34,13 +36,13 @@ public class Parser implements IParser {
     class BlockNode implements INode{
 
         StatementNode stmnt = null;
-        BlockNode block = null;
 
-
-        public BlockNode(Tokenizer P_Tokenizer){
-            stmnt = new StatementNode(P_Tokenizer);
-            if (P_Tokenizer.current().token() != Token.EOF ){
-                block = new BlockNode(P_Tokenizer);
+        public BlockNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
+            if(P_Tokenizer.current().token() == Token.LEFT_CURLY){
+                while(P_Tokenizer.current().token() != Token.RIGHT_CURLY){
+                    P_Tokenizer.moveNext();
+                    stmnt = new StatementNode(P_Tokenizer);
+                }
             }
         }
 
