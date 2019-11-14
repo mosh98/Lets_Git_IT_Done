@@ -128,4 +128,9 @@ public class Tokenizer implements ITokenizer {
         if (scanner != null)
             scanner.close();
     }
+
+
+    public HashMap<Character,Token> getOperatorsMap(){
+        return operators;
+    }
 }

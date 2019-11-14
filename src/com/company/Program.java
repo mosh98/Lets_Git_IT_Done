@@ -3,16 +3,17 @@ package com.company;
 import java.io.*;
 
 public class Program {
-	public static void main(String[] args) throws IOException {
-		String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program1.txt";
-		String outputFileName;
-		IParser parser = new Parser();
 
+	public static void main(String[] args) throws IOException {
+		String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program2.txt";
+		String outputFileName = "test";
+		IParser parser = new Parser();
 		INode root = null;		// Root of the parse tree.
 		StringBuilder builder = null;
 		FileOutputStream stream = null;
 		try {
 			stream = new FileOutputStream("/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt");
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -20,11 +21,11 @@ public class Program {
 		
 		try {
 			try {
-				if (args.length < 2)
+				/*if (args.length < 2)
 					throw new Exception("Incorrect number of parameters to program.");
 				inputFileName = args[0];
 				outputFileName = args[1];
-				
+				*/
 				parser = new Parser();
 				parser.open(inputFileName);
 

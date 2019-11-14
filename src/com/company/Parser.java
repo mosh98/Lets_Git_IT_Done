@@ -4,14 +4,16 @@ import java.io.IOException;
 
 public class Parser implements IParser {
 
+
     public Tokenizer tokenizer = null;
 
     public StringBuilder stringBuilder = null;
 
 
     public void add_indents(int tabs){
+        final String BLACK_SPACE = "  ";
         for(int i =0; i <tabs; i++){
-            stringBuilder.append(" ");
+            stringBuilder.append(BLACK_SPACE);
         }
     }
 
@@ -28,6 +30,7 @@ public class Parser implements IParser {
     public INode parse() throws IOException, TokenizerException, ParserException {
         if (tokenizer == null)
             throw new IOException("No open file.");
+
         return new AssignmentNode(tokenizer);
     }
 
@@ -92,8 +95,7 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            stringBuilder.append(builder +"\n");
+
         }
     }
 
@@ -103,15 +105,25 @@ public class Parser implements IParser {
         ExpressionNode ex = null;
 
         public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
+        StringBuilder temp = new StringBuilder();
 
        if(P_Tokenizer.current().token() == Token.IDENT){
-
-
-           String lexeme = P_Tokenizer.current().value().toString();
-           stringBuilder.append(P_Tokenizer.current().token() + lexeme);
+           String lexeme = P_Tokenizer.current().toString();
+           temp.append("AssignmentNode");
+           buildString(temp,1);
+           temp.append(lexeme);
+           buildString(temp,0);
 
        }
             P_Tokenizer.moveNext();
+
+       while (P_Tokenizer.current().token() != Token.ASSIGN_OP){
+
+           P_Tokenizer.moveNext();
+
+       }
+            System.out.print(P_Tokenizer.current().toString() + "\n");
+                ex = new ExpressionNode(P_Tokenizer);
 
         }
 
@@ -122,16 +134,40 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            stringBuilder.append(builder +"\n");
+            //add_indents(tabs);
+
+          //  stringBuilder.append(builder +"\n");
 
         }
     }
 
     class ExpressionNode implements INode{
 
+        TermNode termNode = null;
 
-        public ExpressionNode(Tokenizer P_Tokenizer) {
+
+        public ExpressionNode(Tokenizer tokenizer) throws IOException, TokenizerException {
+
+            /**
+             * Find term
+             * Loop though the P_tokenizer
+             * find the first + or - symbol
+             *
+             */
+
+            termNode = new TermNode(tokenizer);
+
+            while( tokenizer.current().token() !=  (Token.ADD_OP ) ){
+                if(tokenizer.current().token() !=  (Token.SUB_OP ))
+                        tokenizer.moveNext();
+            }
+
+            System.out.println(tokenizer.current().toString());
+            tokenizer.moveNext();
+
+            if(tokenizer.current().token() != Token.EOF){
+                ExpressionNode x = new ExpressionNode(tokenizer);
+            }
         }
 
         @Override
@@ -142,7 +178,7 @@ public class Parser implements IParser {
         @Override
         public void buildString(StringBuilder builder, int tabs) {
             add_indents(tabs);
-            stringBuilder.append(builder +"\n");
+            stringBuilder.append(builder);
         }
     }
     class TermNode implements INode{
