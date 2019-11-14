@@ -1,6 +1,7 @@
 package com.company;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Parser implements IParser {
 
@@ -9,6 +10,7 @@ public class Parser implements IParser {
 
     public StringBuilder stringBuilder = null;
 
+    public ArrayList<Character> database = new ArrayList<>();
 
     public void add_indents(int tabs){
         final String BLACK_SPACE = "  ";
@@ -107,6 +109,9 @@ public class Parser implements IParser {
         public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
         StringBuilder temp = new StringBuilder();
 
+        ex = new ExpressionNode(P_Tokenizer);
+
+
        if(P_Tokenizer.current().token() == Token.IDENT){
            String lexeme = P_Tokenizer.current().toString();
            temp.append("AssignmentNode");
@@ -136,31 +141,33 @@ public class Parser implements IParser {
         public void buildString(StringBuilder builder, int tabs) {
             //add_indents(tabs);
 
-          //  stringBuilder.append(builder +"\n");
+            stringBuilder.append(builder);
 
         }
     }
 
-    class ExpressionNode implements INode{
+    class ExpressionNode implements INode {
 
         TermNode termNode = null;
 
 
-        public ExpressionNode(Tokenizer tokenizer) throws IOException, TokenizerException {
+        public ExpressionNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
 
             /**
              * Find term
              * Loop though the P_tokenizer
              * find the first + or - symbol
-             *
+             * put it in datastructure
              */
 
-            termNode = new TermNode(tokenizer);
+            termNode = new TermNode(P_tokenizer);
 
-            while( tokenizer.current().token() !=  (Token.ADD_OP ) ){
-                if(tokenizer.current().token() !=  (Token.SUB_OP ))
-                        tokenizer.moveNext();
+            while (P_tokenizer.current().token() != (Token.ADD_OP)) {
+                if (P_tokenizer.current().token() != (Token.SUB_OP))
+                    tokenizer.moveNext();
             }
+
+
 
             System.out.println(tokenizer.current().toString());
             tokenizer.moveNext();
@@ -183,8 +190,26 @@ public class Parser implements IParser {
     }
     class TermNode implements INode{
 
+        FactorNode fn = null;
 
-        public TermNode(Tokenizer P_Tokenizer) {
+        TermNode tn = null;
+
+        boolean temp = true;
+
+        public TermNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
+            fn = new FactorNode(P_tokenizer);
+            while(temp == true){
+                if(P_tokenizer.current().value() == Token.DIV_OP){
+                    tn = new TermNode(P_tokenizer);
+                        temp = false;
+                }else if(P_tokenizer.current().value() == Token.MULT_OP){
+                    tn = new TermNode(P_tokenizer);
+                    temp= false;
+                }else{
+                    P_tokenizer.moveNext();
+                }
+
+            }
 
         }
 
@@ -196,23 +221,61 @@ public class Parser implements IParser {
         @Override
         public void buildString(StringBuilder builder, int tabs) {
             add_indents(tabs);
-            stringBuilder.append(builder +"\n");
+            stringBuilder.append(builder);
         }
     }
     class FactorNode implements INode{
 
-        public FactorNode(Tokenizer P_Tokenizer) {
+        ExpressionNode ex = null;
+
+
+        public FactorNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
+
+            boolean temp = false;
+
+             while( temp == true){
+
+                 if(Character.isLetterOrDigit((char)P_tokenizer.current().value()) ){
+                    database.add((char)P_tokenizer.current().value()) ;
+                    temp = false;
+                 }else if(P_tokenizer.current().token() == Token.LEFT_PAREN){
+                     ex = new ExpressionNode(P_tokenizer);
+                     temp =false;
+                 } else if(P_tokenizer.current().token() == Token.RIGHT_PAREN){
+
+                 }
+                 else {
+                     P_tokenizer.moveNext();
+                 }
+
+            }
+
+
+
+
+
+
+            /*while(tokenizer.current().token() != Token.LEFT_PAREN){
+                tokenizer.moveNext();
+
+            }
+            tokenizer.moveNext();*/
+            database.add((char)tokenizer.current().value());
+
+
         }
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            return null;
+
+
+            return tokenizer.current().value();
         }
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
             add_indents(tabs);
-            stringBuilder.append(builder +"\n");
+            stringBuilder.append(builder);
         }
     }
 
