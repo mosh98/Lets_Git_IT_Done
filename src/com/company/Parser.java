@@ -102,33 +102,42 @@ public class Parser implements IParser {
     }
 
 
-     class AssignmentNode implements INode{
+    class AssignmentNode implements INode {
 
         ExpressionNode ex = null;
+        String lexeme = null;
 
         public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
-        StringBuilder temp = new StringBuilder();
+            StringBuilder temp = new StringBuilder();
 
-        ex = new ExpressionNode(P_Tokenizer);
+            while (P_Tokenizer.current().token() != Token.IDENT) {
+                P_Tokenizer.moveNext();
+                lexeme = P_Tokenizer.current().toString();
+            }
+
+            while (P_Tokenizer.current().token() != Token.ASSIGN_OP) {
+
+                P_Tokenizer.moveNext();
+            }
+            ex = new ExpressionNode(P_Tokenizer);
+
+            try{
+                P_Tokenizer.moveNext();
+                if(P_Tokenizer.current().token() == Token.SEMICOLON){
+
+                }else {
+                    throw new ParserException("String");
+                }
+            }catch (IllegalArgumentException | ParserException e) {
+                System.out.println(e);
+            }
 
 
-       if(P_Tokenizer.current().token() == Token.IDENT){
-           String lexeme = P_Tokenizer.current().toString();
-           temp.append("AssignmentNode");
-           buildString(temp,1);
-           temp.append(lexeme);
-           buildString(temp,0);
 
-       }
-            P_Tokenizer.moveNext();
 
-       while (P_Tokenizer.current().token() != Token.ASSIGN_OP){
 
-           P_Tokenizer.moveNext();
-
-       }
             System.out.print(P_Tokenizer.current().toString() + "\n");
-                ex = new ExpressionNode(P_Tokenizer);
+            ex = new ExpressionNode(P_Tokenizer);
 
         }
 
