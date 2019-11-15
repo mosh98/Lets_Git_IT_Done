@@ -107,58 +107,33 @@ public class Parser implements IParser {
 
         public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException, ParserException {
 
-            P_Tokenizer.moveNext();
+
             if (P_Tokenizer.current().token() == Token.IDENT) {
-                stringBuilder.append(P_Tokenizer.toString());
+                System.out.println(P_Tokenizer.current().token().toString());
+                //stringBuilder.append(P_Tokenizer.current().token());
                 P_Tokenizer.moveNext();
+
                 if (P_Tokenizer.current().token() == Token.ASSIGN_OP) {
-                    stringBuilder.append(P_Tokenizer.toString());
+                    System.out.println(P_Tokenizer.current().toString());
+                    //stringBuilder.append(P_Tokenizer);
                     P_Tokenizer.moveNext();
                     ex = new ExpressionNode(P_Tokenizer);
+
                     if (P_Tokenizer.current().token() == Token.SEMICOLON) {
-                        stringBuilder.append(P_Tokenizer);
+                        System.out.println(P_Tokenizer.current().toString());
+                        //stringBuilder.append(P_Tokenizer);
                     } else {
                         throw new ParserException("Could not find a Semicolon");
                     }
                 } else {
                     throw new ParserException("Could not find a Assign operatior");
                 }
+
             } else {
                 throw new ParserException("Could not find Identifier");
             }
 
-     /*       StringBuilder temp = new StringBuilder();
 
-            while (P_Tokenizer.current().token() != Token.IDENT) {
-                P_Tokenizer.moveNext();
-                lexeme = P_Tokenizer.current().toString();
-            }
-
-            while (P_Tokenizer.current().token() != Token.ASSIGN_OP) {
-
-                P_Tokenizer.moveNext();
-            }
-            P_Tokenizer.moveNext();
-            ex = new ExpressionNode(P_Tokenizer);
-
-            try{
-                P_Tokenizer.moveNext();
-                if(P_Tokenizer.current().token() == Token.SEMICOLON){
-
-                }else {
-                    throw new ParserException("String");
-                }
-            }catch (IllegalArgumentException | ParserException e) {
-                System.out.println(e);
-            }
-
-
-
-
-
-            System.out.print(P_Tokenizer.current().toString() + "\n");
-            ex = new ExpressionNode(P_Tokenizer);
- */
         }
 
         @Override
@@ -182,7 +157,7 @@ public class Parser implements IParser {
 
         public ExpressionNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
 
-            stringBuilder.append("ExpressionNode");
+           // stringBuilder.append("ExpressionNode");
             termNode = new TermNode(P_tokenizer);
             if (P_tokenizer.current().token() == Token.ADD_OP) {
                 P_tokenizer.moveNext();
@@ -191,19 +166,7 @@ public class Parser implements IParser {
                 P_tokenizer.moveNext();
                 en = new ExpressionNode(P_tokenizer);
             }
-        /*    while (P_tokenizer.current().token() != (Token.ADD_OP)) {
-                if (P_tokenizer.current().token() != (Token.SUB_OP))
-                    tokenizer.moveNext();
-            }
 
-
-
-            System.out.println(tokenizer.current().toString());
-            tokenizer.moveNext();
-
-            if(tokenizer.current().token() != Token.EOF){
-                ExpressionNode x = new ExpressionNode(tokenizer);
-            } */
 
 
         }
@@ -229,7 +192,7 @@ public class Parser implements IParser {
         boolean temp = true;
 
         public TermNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
-            stringBuilder.append("TermNode");
+            //stringBuilder.append("TermNode");
             fn = new FactorNode(P_tokenizer);
             if (P_tokenizer.current().value() == Token.DIV_OP) {
                 P_tokenizer.moveNext();
@@ -240,18 +203,7 @@ public class Parser implements IParser {
             }
 
 
-        /*    while(temp == true){
-                if(P_tokenizer.current().value() == Token.DIV_OP){
-                    tn = new TermNode(P_tokenizer);
-                        temp = false;
-                }else if(P_tokenizer.current().value() == Token.MULT_OP){
-                    tn = new TermNode(P_tokenizer);
-                    temp= false;
-                }else{
-                    P_tokenizer.moveNext();
-                }
 
-            } */
 
         }
 
@@ -273,48 +225,19 @@ public class Parser implements IParser {
 
 
         public FactorNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
-            stringBuilder.append("\nFactorNode");
+            //stringBuilder.append("FactorNode");
 
             if (P_tokenizer.current().token() == Token.INT_LIT) {
-                stringBuilder.append("\n " + P_tokenizer.current().toString());
+                //stringBuilder.append(P_tokenizer.current());
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.IDENT) {
-                stringBuilder.append("\n" + P_tokenizer.current().toString());
+                //stringBuilder.append(P_tokenizer.current());
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
                 ex = new ExpressionNode(P_tokenizer);
             }
 
 
-            // boolean temp = false;
-
-           /*  while( temp == true){
-
-                 if(Character.isLetterOrDigit((char)P_tokenizer.current().value()) ){
-                    database.add((char)P_tokenizer.current().value()) ;
-                    temp = false;
-                 }else if(P_tokenizer.current().token() == Token.LEFT_PAREN){
-                     ex = new ExpressionNode(P_tokenizer);
-                     temp =false;
-                 } else if(P_tokenizer.current().token() == Token.RIGHT_PAREN){
-
-                 }
-                 else {
-                     P_tokenizer.moveNext();
-                 }
-
-            }*/
-
-
-
-
-
-
-            /*while(tokenizer.current().token() != Token.LEFT_PAREN){
-                tokenizer.moveNext();
-
-            }
-            tokenizer.moveNext();*/
             database.add((char) tokenizer.current().value());
 
 
@@ -329,8 +252,8 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            stringBuilder.append(builder);
+            //add_indents(tabs);
+            //stringBuilder.append(builder);
         }
     }
 
