@@ -5,16 +5,15 @@ import java.util.ArrayList;
 
 public class Parser implements IParser {
 
-
     public Tokenizer tokenizer = null;
 
-    public StringBuilder stringBuilder = new StringBuilder();
+    public StringBuilder stringBuilder = null;
 
     public ArrayList<Character> database = new ArrayList<>();
 
-    public void add_indents(int tabs){
+    public void add_indents(int tabs) {
         final String BLACK_SPACE = "  ";
-        for(int i =0; i <tabs; i++){
+        for (int i = 0; i < tabs; i++) {
             stringBuilder.append(BLACK_SPACE);
         }
     }
@@ -43,14 +42,13 @@ public class Parser implements IParser {
     }
 
 
-
-    class BlockNode implements INode{
+    class BlockNode implements INode {
 
         StatementNode stmnt = null;
 
         public BlockNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
-            if(P_Tokenizer.current().token() == Token.LEFT_CURLY){
-                while(P_Tokenizer.current().token() != Token.RIGHT_CURLY){
+            if (P_Tokenizer.current().token() == Token.LEFT_CURLY) {
+                while (P_Tokenizer.current().token() != Token.RIGHT_CURLY) {
                     P_Tokenizer.moveNext();
                     stmnt = new StatementNode(P_Tokenizer);
                 }
@@ -66,14 +64,14 @@ public class Parser implements IParser {
         @Override
         public void buildString(StringBuilder builder, int tabs) {
             add_indents(tabs);
-            stringBuilder.append(builder );
+            stringBuilder.append(builder + "\n");
         }
     }
 
-    class StatementNode implements INode{
+    class StatementNode implements INode {
 
         AssignmentNode assignmentNode = null;
-       // can go back to Statement node again
+        // can go back to Statement node again
         StatementNode stmt = null;
 
 
@@ -83,8 +81,8 @@ public class Parser implements IParser {
              * go through the string and find the = symbol
              *if found move next and
              * */
-           // assignmentNode = new AssignmentNode(P_Tokenizer);
-            if (P_Tokenizer.current().token() != Token.EOF ){
+            // assignmentNode = new AssignmentNode(P_Tokenizer);
+            if (P_Tokenizer.current().token() != Token.EOF) {
                 stmt = new StatementNode(P_Tokenizer);
             }
 
@@ -101,38 +99,52 @@ public class Parser implements IParser {
         }
     }
 
+
     class AssignmentNode implements INode {
-
-
-
-        StringBuilder temp = new StringBuilder();
 
         ExpressionNode ex = null;
         String lexeme = null;
 
-        public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
+        public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException, ParserException {
 
-            stringBuilder.append("AssignmentNode");
+            P_Tokenizer.moveNext();
+            if (P_Tokenizer.current().token() == Token.IDENT) {
+                stringBuilder.append(P_Tokenizer.toString());
+                P_Tokenizer.moveNext();
+                if (P_Tokenizer.current().token() == Token.ASSIGN_OP) {
+                    stringBuilder.append(P_Tokenizer.toString());
+                    P_Tokenizer.moveNext();
+                    ex = new ExpressionNode(P_Tokenizer);
+                    if (P_Tokenizer.current().token() == Token.SEMICOLON) {
+                        stringBuilder.append(P_Tokenizer);
+                    } else {
+                        throw new ParserException("Could not find a Semicolon");
+                    }
+                } else {
+                    throw new ParserException("Could not find a Assign operatior");
+                }
+            } else {
+                throw new ParserException("Could not find Identifier");
+            }
 
+     /*       StringBuilder temp = new StringBuilder();
 
             while (P_Tokenizer.current().token() != Token.IDENT) {
                 P_Tokenizer.moveNext();
                 lexeme = P_Tokenizer.current().toString();
-
             }
-            temp.append(P_Tokenizer.current());
 
             while (P_Tokenizer.current().token() != Token.ASSIGN_OP) {
 
                 P_Tokenizer.moveNext();
             }
-            temp.append(P_Tokenizer.current());
+            P_Tokenizer.moveNext();
             ex = new ExpressionNode(P_Tokenizer);
 
             try{
                 P_Tokenizer.moveNext();
                 if(P_Tokenizer.current().token() == Token.SEMICOLON){
-                    temp.append(P_Tokenizer.current());
+
                 }else {
                     throw new ParserException("String");
                 }
@@ -141,10 +153,12 @@ public class Parser implements IParser {
             }
 
 
+
+
+
             System.out.print(P_Tokenizer.current().toString() + "\n");
-
-
-            buildString(temp,0);
+            ex = new ExpressionNode(P_Tokenizer);
+ */
         }
 
         @Override
@@ -164,20 +178,20 @@ public class Parser implements IParser {
     class ExpressionNode implements INode {
 
         TermNode termNode = null;
-
+        ExpressionNode en = null;
 
         public ExpressionNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
 
-            /**
-             * Find term
-             * Loop though the P_tokenizer
-             * find the first + or - symbol
-             * put it in datastructure
-             */
-
+            stringBuilder.append("ExpressionNode");
             termNode = new TermNode(P_tokenizer);
-
-            while (P_tokenizer.current().token() != (Token.ADD_OP)) {
+            if (P_tokenizer.current().token() == Token.ADD_OP) {
+                P_tokenizer.moveNext();
+                en = new ExpressionNode(P_tokenizer);
+            } else if (P_tokenizer.current().token() == Token.SUB_OP) {
+                P_tokenizer.moveNext();
+                en = new ExpressionNode(P_tokenizer);
+            }
+        /*    while (P_tokenizer.current().token() != (Token.ADD_OP)) {
                 if (P_tokenizer.current().token() != (Token.SUB_OP))
                     tokenizer.moveNext();
             }
@@ -189,7 +203,9 @@ public class Parser implements IParser {
 
             if(tokenizer.current().token() != Token.EOF){
                 ExpressionNode x = new ExpressionNode(tokenizer);
-            }
+            } */
+
+
         }
 
         @Override
@@ -203,7 +219,8 @@ public class Parser implements IParser {
             stringBuilder.append(builder);
         }
     }
-    class TermNode implements INode{
+
+    class TermNode implements INode {
 
         FactorNode fn = null;
 
@@ -212,21 +229,29 @@ public class Parser implements IParser {
         boolean temp = true;
 
         public TermNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
+            stringBuilder.append("TermNode");
             fn = new FactorNode(P_tokenizer);
-            while(temp == true){
-                if(P_tokenizer.current().token() == Token.DIV_OP){
-                    P_tokenizer.moveNext();
+            if (P_tokenizer.current().value() == Token.DIV_OP) {
+                P_tokenizer.moveNext();
+                tn = new TermNode(P_tokenizer);
+            } else if (P_tokenizer.current().value() == Token.MULT_OP) {
+                P_tokenizer.moveNext();
+                tn = new TermNode(P_tokenizer);
+            }
+
+
+        /*    while(temp == true){
+                if(P_tokenizer.current().value() == Token.DIV_OP){
                     tn = new TermNode(P_tokenizer);
                         temp = false;
-                }else if(P_tokenizer.current().token() == Token.MULT_OP){
-                    P_tokenizer.moveNext();
+                }else if(P_tokenizer.current().value() == Token.MULT_OP){
                     tn = new TermNode(P_tokenizer);
                     temp= false;
                 }else{
                     P_tokenizer.moveNext();
                 }
 
-            }
+            } */
 
         }
 
@@ -241,16 +266,29 @@ public class Parser implements IParser {
             stringBuilder.append(builder);
         }
     }
-    class FactorNode implements INode{
+
+    class FactorNode implements INode {
 
         ExpressionNode ex = null;
 
 
         public FactorNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
+            stringBuilder.append("\nFactorNode");
 
-            boolean temp = false;
+            if (P_tokenizer.current().token() == Token.INT_LIT) {
+                stringBuilder.append("\n " + P_tokenizer.current().toString());
+                P_tokenizer.moveNext();
+            } else if (P_tokenizer.current().token() == Token.IDENT) {
+                stringBuilder.append("\n" + P_tokenizer.current().toString());
+                P_tokenizer.moveNext();
+            } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
+                ex = new ExpressionNode(P_tokenizer);
+            }
 
-             while( temp == true){
+
+            // boolean temp = false;
+
+           /*  while( temp == true){
 
                  if(Character.isLetterOrDigit((char)P_tokenizer.current().value()) ){
                     database.add((char)P_tokenizer.current().value()) ;
@@ -265,7 +303,7 @@ public class Parser implements IParser {
                      P_tokenizer.moveNext();
                  }
 
-            }
+            }*/
 
 
 
@@ -277,7 +315,7 @@ public class Parser implements IParser {
 
             }
             tokenizer.moveNext();*/
-            //database.add((char)tokenizer.current().value());
+            database.add((char) tokenizer.current().value());
 
 
         }
@@ -295,8 +333,6 @@ public class Parser implements IParser {
             stringBuilder.append(builder);
         }
     }
-
-
 
 
 
