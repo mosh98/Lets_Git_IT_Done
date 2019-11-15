@@ -194,10 +194,10 @@ public class Parser implements IParser {
         public TermNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
             //stringBuilder.append("TermNode");
             fn = new FactorNode(P_tokenizer);
-            if (P_tokenizer.current().value() == Token.DIV_OP) {
+            if (P_tokenizer.current().token() == Token.DIV_OP) {
                 P_tokenizer.moveNext();
                 tn = new TermNode(P_tokenizer);
-            } else if (P_tokenizer.current().value() == Token.MULT_OP) {
+            } else if (P_tokenizer.current().token() == Token.MULT_OP) {
                 P_tokenizer.moveNext();
                 tn = new TermNode(P_tokenizer);
             }
@@ -235,6 +235,7 @@ public class Parser implements IParser {
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
                 ex = new ExpressionNode(P_tokenizer);
+                P_tokenizer.moveNext();
             }
 
 
