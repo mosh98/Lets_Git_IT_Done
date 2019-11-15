@@ -117,7 +117,9 @@ public class Parser implements IParser {
                     System.out.println(P_Tokenizer.current().toString());
                     //stringBuilder.append(P_Tokenizer);
                     P_Tokenizer.moveNext();
+
                     ex = new ExpressionNode(P_Tokenizer);
+                    System.out.println(P_Tokenizer.current().token().toString());
 
                     if (P_Tokenizer.current().token() == Token.SEMICOLON) {
                         System.out.println(P_Tokenizer.current().toString());
@@ -162,6 +164,7 @@ public class Parser implements IParser {
             if (P_tokenizer.current().token() == Token.ADD_OP) {
                 P_tokenizer.moveNext();
                 en = new ExpressionNode(P_tokenizer);
+
             } else if (P_tokenizer.current().token() == Token.SUB_OP) {
                 P_tokenizer.moveNext();
                 en = new ExpressionNode(P_tokenizer);
@@ -235,6 +238,8 @@ public class Parser implements IParser {
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
                 ex = new ExpressionNode(P_tokenizer);
+                P_tokenizer.moveNext();
+            }else if (P_tokenizer.current().token() == Token.RIGHT_PAREN){
                 P_tokenizer.moveNext();
             }
 
