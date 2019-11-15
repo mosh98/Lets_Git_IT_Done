@@ -7,7 +7,7 @@ public class Parser implements IParser {
 
     public Tokenizer tokenizer = null;
 
-    public StringBuilder stringBuilder = null;
+    public StringBuilder stringBuilder = new StringBuilder();
 
     public ArrayList<Character> database = new ArrayList<>();
 
@@ -107,22 +107,22 @@ public class Parser implements IParser {
 
         public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException, ParserException {
 
+            //stringBuilder.append("AssigmentNode ");
 
             if (P_Tokenizer.current().token() == Token.IDENT) {
-                System.out.println(P_Tokenizer.current().token().toString());
-                //stringBuilder.append(P_Tokenizer.current().token());
+
+                stringBuilder.append(P_Tokenizer.current().toString());
+
                 P_Tokenizer.moveNext();
 
                 if (P_Tokenizer.current().token() == Token.ASSIGN_OP) {
-                    System.out.println(P_Tokenizer.current().toString());
-                    //stringBuilder.append(P_Tokenizer);
+                    stringBuilder.append(P_Tokenizer.current().toString());
                     P_Tokenizer.moveNext();
                     ex = new ExpressionNode(P_Tokenizer);
 
                     if (P_Tokenizer.current().token() == Token.SEMICOLON) {
-                        System.out.println(P_Tokenizer.current().toString());
+                        stringBuilder.append(P_Tokenizer.current().toString());
 
-                        //stringBuilder.append(P_Tokenizer);
                     } else {
                         throw new ParserException("Could not find a Semicolon");
                     }
@@ -146,7 +146,7 @@ public class Parser implements IParser {
         public void buildString(StringBuilder builder, int tabs) {
             //add_indents(tabs);
 
-            stringBuilder.append(builder);
+            builder.append(stringBuilder);
 
         }
     }
@@ -161,9 +161,11 @@ public class Parser implements IParser {
            // stringBuilder.append("ExpressionNode");
             termNode = new TermNode(P_tokenizer);
             if (P_tokenizer.current().token() == Token.ADD_OP) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
                 en = new ExpressionNode(P_tokenizer);
             } else if (P_tokenizer.current().token() == Token.SUB_OP) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
                 en = new ExpressionNode(P_tokenizer);
             }
@@ -196,9 +198,11 @@ public class Parser implements IParser {
             //stringBuilder.append("TermNode");
             fn = new FactorNode(P_tokenizer);
             if (P_tokenizer.current().token() == Token.DIV_OP) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
                 tn = new TermNode(P_tokenizer);
             } else if (P_tokenizer.current().token() == Token.MULT_OP) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
                 tn = new TermNode(P_tokenizer);
             }
@@ -230,14 +234,18 @@ public class Parser implements IParser {
 
             if (P_tokenizer.current().token() == Token.INT_LIT) {
                 //stringBuilder.append(P_tokenizer.current());
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.IDENT) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 //stringBuilder.append(P_tokenizer.current());
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
+                stringBuilder.append(P_tokenizer.current().toString());
                 P_tokenizer.moveNext();
                 ex = new ExpressionNode(P_tokenizer);
                 if(P_tokenizer.current().token() == Token.RIGHT_PAREN){
+                    stringBuilder.append(P_tokenizer.current().toString());
                     P_tokenizer.moveNext();
                 } else{
                     throw new TokenizerException("couldnt find right_paren");
@@ -259,8 +267,7 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) {
-            //add_indents(tabs);
-            //stringBuilder.append(builder);
+
         }
     }
 

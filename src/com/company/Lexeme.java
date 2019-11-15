@@ -20,6 +20,6 @@ public class Lexeme {
 	
 	@Override
 	public String toString() {
-		return token + " " + value.toString();
+		return token.toString()  + " " + value.toString() +" "+ "\n";
 	}
 }

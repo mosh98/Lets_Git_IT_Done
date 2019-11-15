@@ -6,12 +6,18 @@ public class Program {
 
 	public static void main(String[] args) throws IOException {
 		String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program1.txt";
-		String outputFileName = null;
+		String outputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt";
 		IParser parser = null;
 		INode root = null; // Root of the parse tree.
-		StringBuilder builder = null;
+		StringBuilder builder;
 		FileOutputStream stream = null;
-		OutputStreamWriter writer = null;
+		try {
+			stream = new FileOutputStream("/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt");
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		OutputStreamWriter writer = new OutputStreamWriter(stream,"UTF-8");
 
 		try {
 			try {
