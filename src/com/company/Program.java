@@ -5,7 +5,7 @@ import java.io.*;
 public class Program {
 
 	public static void main(String[] args) throws IOException {
-		String inputFileName = "/Users/mos/Documents/IntelliJIdea/src/com/company/program1.txt";
+		String inputFileName = "C:/Users/imran/Desktop/program1.txt";
 		String outputFileName = null;
 		IParser parser = null;
 		INode root = null; // Root of the parse tree.
@@ -25,7 +25,9 @@ public class Program {
 				root = parser.parse();
 				builder = new StringBuilder();
 				builder.append("PARSE TREE:\n");
+
 				root.buildString(builder, 0);
+
 				builder.append("\nEVALUATION:\n");
 				builder.append(root.evaluate(null));
 

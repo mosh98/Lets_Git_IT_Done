@@ -121,6 +121,7 @@ public class Parser implements IParser {
 
                     if (P_Tokenizer.current().token() == Token.SEMICOLON) {
                         System.out.println(P_Tokenizer.current().toString());
+
                         //stringBuilder.append(P_Tokenizer);
                     } else {
                         throw new ParserException("Could not find a Semicolon");
@@ -234,8 +235,13 @@ public class Parser implements IParser {
                 //stringBuilder.append(P_tokenizer.current());
                 P_tokenizer.moveNext();
             } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
-                ex = new ExpressionNode(P_tokenizer);
                 P_tokenizer.moveNext();
+                ex = new ExpressionNode(P_tokenizer);
+                if(P_tokenizer.current().token() == Token.RIGHT_PAREN){
+                    P_tokenizer.moveNext();
+                } else{
+                    throw new TokenizerException("couldnt find right_paren");
+                }
             }
 
 
