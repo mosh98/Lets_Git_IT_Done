@@ -5,14 +5,14 @@ import java.io.*;
 public class Program {
 
 	public static void main(String[] args) throws IOException {
-		String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program1.txt";
-		String outputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt";
+		String inputFileName = "C:/Users/imran/Desktop/program1.txt";
+		String outputFileName = "C:\\Users\\imran\\Desktop\\Parser\\Parser\\src\\com\\company\\test";
 		IParser parser = null;
 		INode root = null; // Root of the parse tree.
 		StringBuilder builder;
 		FileOutputStream stream = null;
 		try {
-			stream = new FileOutputStream("/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt");
+			stream = new FileOutputStream("C:\\Users\\imran\\Desktop\\Parser\\Parser\\src\\com\\company\\test");
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -33,7 +33,7 @@ public class Program {
 				builder.append("PARSE TREE:\n");
 				root.buildString(builder, 0);
 				builder.append("\nEVALUATION:\n");
-				builder.append(root.evaluate(null));
+			//	builder.append(root.evaluate(null));
 
 				stream = new FileOutputStream(outputFileName);
 				writer = new OutputStreamWriter(stream);

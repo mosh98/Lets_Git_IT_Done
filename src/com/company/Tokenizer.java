@@ -87,6 +87,7 @@ public class Tokenizer implements ITokenizer {
         Character ch = scanner.current();
         StringBuilder strBuilder = new StringBuilder();
         String lexemeString;
+        double lexemeNumber;
 
         if(ch == null)
             return new Lexeme(ch,Token.NULL);
@@ -99,8 +100,8 @@ public class Tokenizer implements ITokenizer {
                 strBuilder.append(scanner.current());
                 scanner.moveNext();
             }
-            lexemeString = strBuilder.toString();
-            return new Lexeme(lexemeString, Token.INT_LIT);
+            lexemeNumber = Double.valueOf(strBuilder.toString());
+            return new Lexeme(lexemeNumber, Token.INT_LIT);
 
         } else if (Character.isLetter(ch)) {
             while (Character.isLetter(scanner.current())) {

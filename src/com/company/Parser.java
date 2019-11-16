@@ -7,15 +7,17 @@ public class Parser implements IParser {
 
     public Tokenizer tokenizer = null;
 
-    public StringBuilder stringBuilder = new StringBuilder();
+    public Object [] data = new Object[10];
 
+    public StringBuilder builder = new StringBuilder();
     public ArrayList<Character> database = new ArrayList<>();
 
-    public void add_indents(int tabs) {
-        final String BLACK_SPACE = "  ";
+    public String add_indents(int tabs) {
+        String BLACK_SPACE = "";
         for (int i = 0; i < tabs; i++) {
-            stringBuilder.append(BLACK_SPACE);
+             BLACK_SPACE = BLACK_SPACE + "\t";
         }
+        return BLACK_SPACE;
     }
 
     @Override
@@ -29,10 +31,10 @@ public class Parser implements IParser {
 
     @Override
     public INode parse() throws IOException, TokenizerException, ParserException {
-        if (tokenizer == null)
+        if (tokenizer == null) {
             throw new IOException("No open file.");
-
-        return new AssignmentNode(tokenizer);
+        }
+        return new AssignmentNode();
     }
 
     @Override
@@ -64,7 +66,7 @@ public class Parser implements IParser {
         @Override
         public void buildString(StringBuilder builder, int tabs) {
             add_indents(tabs);
-            stringBuilder.append(builder + "\n");
+            builder.append(builder + "\n");
         }
     }
 
@@ -105,49 +107,35 @@ public class Parser implements IParser {
         ExpressionNode ex = null;
         String lexeme = null;
 
-        public AssignmentNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException, ParserException {
 
-            //stringBuilder.append("AssigmentNode ");
+        @Override
+        public Object evaluate(Object[] args) throws Exception {
+            return ex.evaluate(data);
+        }
 
-            if (P_Tokenizer.current().token() == Token.IDENT) {
-
-                stringBuilder.append(P_Tokenizer.current().toString());
-
-                P_Tokenizer.moveNext();
-
-                if (P_Tokenizer.current().token() == Token.ASSIGN_OP) {
-                    stringBuilder.append(P_Tokenizer.current().toString());
-                    P_Tokenizer.moveNext();
-                    ex = new ExpressionNode(P_Tokenizer);
-
-                    if (P_Tokenizer.current().token() == Token.SEMICOLON) {
-                        stringBuilder.append(P_Tokenizer.current().toString());
-
+        @Override
+        public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
+            builder.append("AssigmentNode\n");
+            tabs +=1;
+            if (tokenizer.current().token() == Token.IDENT) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+                if (tokenizer.current().token() == Token.ASSIGN_OP) {
+                    builder.append(add_indents(tabs)+tokenizer.current().toString());
+                    tokenizer.moveNext();
+                    ex = new ExpressionNode();
+                    ex.buildString(builder, (tabs +1));
+                    if (tokenizer.current().token() == Token.SEMICOLON) {
+                        builder.append(add_indents(tabs)+tokenizer.current().toString());
                     } else {
                         throw new ParserException("Could not find a Semicolon");
                     }
                 } else {
                     throw new ParserException("Could not find a Assign operatior");
                 }
-
             } else {
                 throw new ParserException("Could not find Identifier");
             }
-
-
-        }
-
-        @Override
-        public Object evaluate(Object[] args) throws Exception {
-            return null;
-        }
-
-        @Override
-        public void buildString(StringBuilder builder, int tabs) {
-            //add_indents(tabs);
-
-            builder.append(stringBuilder);
-
         }
     }
 
@@ -156,33 +144,29 @@ public class Parser implements IParser {
         TermNode termNode = null;
         ExpressionNode en = null;
 
-        public ExpressionNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
-
-           // stringBuilder.append("ExpressionNode");
-            termNode = new TermNode(P_tokenizer);
-            if (P_tokenizer.current().token() == Token.ADD_OP) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-                en = new ExpressionNode(P_tokenizer);
-            } else if (P_tokenizer.current().token() == Token.SUB_OP) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-                en = new ExpressionNode(P_tokenizer);
-            }
-
-
-
-        }
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            termNode.evaluate(data);
             return null;
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            stringBuilder.append(builder);
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException  {
+            builder.append(add_indents(tabs -1 ) + "ExpressionNode\n");
+            termNode = new TermNode();
+            termNode.buildString(builder, (tabs+1));
+            if (tokenizer.current().token() == Token.ADD_OP) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+                en = new ExpressionNode();
+                en.buildString(builder, tabs+1);
+            } else if (tokenizer.current().token() == Token.SUB_OP) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+                en = new ExpressionNode();
+                en.buildString(builder, tabs+1);
+            }
         }
     }
 
@@ -192,82 +176,70 @@ public class Parser implements IParser {
 
         TermNode tn = null;
 
-        boolean temp = true;
-
-        public TermNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
-            //stringBuilder.append("TermNode");
-            fn = new FactorNode(P_tokenizer);
-            if (P_tokenizer.current().token() == Token.DIV_OP) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-                tn = new TermNode(P_tokenizer);
-            } else if (P_tokenizer.current().token() == Token.MULT_OP) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-                tn = new TermNode(P_tokenizer);
-            }
-
-
-
-
-        }
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+
+           fn.evaluate(data);
             return null;
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            stringBuilder.append(builder);
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
+            builder.append(add_indents(tabs-1)+"TermNode\n");
+            fn = new FactorNode();
+            fn.buildString(builder,(tabs+1));
+            if (tokenizer.current().token() == Token.DIV_OP) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+                tn = new TermNode();
+                tn.buildString(builder, (tabs+1));
+            } else if (tokenizer.current().token() == Token.MULT_OP) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+                tn = new TermNode();
+                tn.buildString(builder, tabs+1);
+            }
         }
     }
 
     class FactorNode implements INode {
 
         ExpressionNode ex = null;
-
-
-        public FactorNode(Tokenizer P_tokenizer) throws IOException, TokenizerException {
-            //stringBuilder.append("FactorNode");
-
-            if (P_tokenizer.current().token() == Token.INT_LIT) {
-                //stringBuilder.append(P_tokenizer.current());
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-            } else if (P_tokenizer.current().token() == Token.IDENT) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                //stringBuilder.append(P_tokenizer.current());
-                P_tokenizer.moveNext();
-            } else if (P_tokenizer.current().token() == Token.LEFT_PAREN) {
-                stringBuilder.append(P_tokenizer.current().toString());
-                P_tokenizer.moveNext();
-                ex = new ExpressionNode(P_tokenizer);
-                if(P_tokenizer.current().token() == Token.RIGHT_PAREN){
-                    stringBuilder.append(P_tokenizer.current().toString());
-                    P_tokenizer.moveNext();
-                } else{
-                    throw new TokenizerException("couldnt find right_paren");
-                }
-            }
-
-
-            database.add((char) tokenizer.current().value());
-
-
-        }
-
+        boolean temp = true;
         @Override
         public Object evaluate(Object[] args) throws Exception {
-
-
+            while(temp) {
+                if(tokenizer.current().token() == Token.LEFT_PAREN){
+                    
+                }
+                    tokenizer.moveNext();
+            }
             return tokenizer.current().value();
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) {
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
+            builder.append(add_indents(tabs-1)+"FactorNode\n");
 
+            if (tokenizer.current().token() == Token.INT_LIT) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+            } else if (tokenizer.current().token() == Token.IDENT) {
+                builder.append(add_indents(tabs)+tokenizer.current().toString());
+                tokenizer.moveNext();
+            } else if (tokenizer.current().token() == Token.LEFT_PAREN) {
+                builder.append(add_indents(tabs) +tokenizer.current().toString());
+                tokenizer.moveNext();
+                ex = new ExpressionNode();
+                ex.buildString(builder,tabs+1);
+                if(tokenizer.current().token() == Token.RIGHT_PAREN){
+                    builder.append(add_indents(tabs) +tokenizer.current().toString());
+                    tokenizer.moveNext();
+                } else{
+                    throw new TokenizerException("couldnt find right_paren");
+                }
+            }
         }
     }
 

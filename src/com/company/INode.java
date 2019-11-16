@@ -1,5 +1,7 @@
 package com.company;
 
+import java.io.IOException;
+
 public interface INode {
 	/**
 	 * The argument array 'args' is only needed for the requirements for grade A and B.
@@ -7,5 +9,5 @@ public interface INode {
 	 */
 	Object evaluate(Object[] args) throws Exception; 
 	
-	void buildString(StringBuilder builder, int tabs);
+	void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException;
 }
