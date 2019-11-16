@@ -206,10 +206,12 @@ public class Parser implements IParser {
 
         TermNode termNode = null;
         ExpressionNode en = null;
-
+        Tokenizer token = tokenizer;
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            while()
+
             termNode.evaluate(data);
             return null;
         }
