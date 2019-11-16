@@ -32,3 +32,4 @@ AssigmentNode
 	SEMICOLON ; 
 
 EVALUATION:
+1.8

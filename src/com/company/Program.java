@@ -6,7 +6,7 @@ public class Program {
 
     public static void main(String[] args) throws IOException {
         String inputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/program1.txt";
-        String outputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/test.txt";
+        String outputFileName = "/Users/moslehmahamud/Documents/IntelliJIdea/src/com/company/testz.txt";
         IParser parser = null;
         INode root = null; // Root of the parse tree.
         StringBuilder builder;

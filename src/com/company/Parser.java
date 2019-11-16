@@ -18,13 +18,16 @@ public class Parser implements IParser {
     public ArrayList<Character> database = new ArrayList<>();
     double x = 0;
 
+    public double eval() {
 
+        if(flag = false){
+            return Double.parseDouble(null);
+        }
 
-    public Object evaluateCalculate(StringBuilder builder) throws ScriptException {
+        String tempString = stringBuilder.toString();
 
         StringBuilder tempBuilder = new StringBuilder();
         ArrayList<Character> tempArr = new ArrayList<>();
-        String tempString = builder.toString();
 
         for (int i = 0; i < tempString.length(); i++) {
             char thisChar = tempString.charAt(i);
@@ -51,11 +54,85 @@ public class Parser implements IParser {
             tempBuilder.append(c);
         }
 
-        ScriptEngineManager mgr = new ScriptEngineManager();
-        ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        String str = tempBuilder.toString();
 
-        System.out.println(engine.eval(tempBuilder.toString()));
-        return  engine.eval(tempBuilder.toString());
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                return x;
+            }
+
+            // Grammar:
+            // expression = term | expression `+` term | expression `-` term
+            // term = factor | term `*` factor | term `/` factor
+            // factor = `+` factor | `-` factor | `(` expression `)`
+            //        | number | functionName factor | factor `^` factor
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if      (eat('+')) x += parseTerm(); // addition
+                    else if (eat('-')) x -= parseTerm(); // subtraction
+                    else return x;
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if      (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('/')) x /= parseFactor(); // division
+                    else return x;
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) return parseFactor(); // unary plus
+                if (eat('-')) return -parseFactor(); // unary minus
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(str.substring(startPos, this.pos));
+                } else if (ch >= 'a' && ch <= 'z') { // functions
+                    while (ch >= 'a' && ch <= 'z') nextChar();
+                    String func = str.substring(startPos, this.pos);
+                    x = parseFactor();
+                    if (func.equals("sqrt")) x = Math.sqrt(x);
+                    else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
+                    else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
+                    else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
+                    else throw new RuntimeException("Unknown function: " + func);
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char)ch);
+                }
+
+                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
+
+                return x;
+            }
+        }.parse();
     }
 
     public String add_indents(int tabs) {
@@ -127,7 +204,7 @@ public class Parser implements IParser {
 
             /***
              * go through the string and find the = symbol
-             *if found move next and
+             *  if found move next and
              * */
             // assignmentNode = new AssignmentNode(P_Tokenizer);
             if (P_Tokenizer.current().token() != Token.EOF) {
@@ -159,7 +236,8 @@ public class Parser implements IParser {
         public Object evaluate(Object[] args) throws Exception {
 
             if(flag = true){
-                return evaluateCalculate(stringBuilder);
+
+                return eval();
 
             }
 
@@ -183,12 +261,9 @@ public class Parser implements IParser {
                         builder.append(add_indents(tabs) + tokenizer.current().toString());
                         stringBuilder.append(builder);
                         flag= true;
-                        try {
-                            x = (double) evaluateCalculate(stringBuilder);
 
-                        }catch (ScriptException e){
 
-                        }
+
 
                     } else {
                         throw new ParserException("Could not find a Semicolon");
