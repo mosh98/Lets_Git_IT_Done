@@ -210,7 +210,6 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            while()
 
             termNode.evaluate(data);
             return null;
