@@ -15,6 +15,8 @@ public class Parser implements IParser {
     public boolean flag = false;
 
     public StringBuilder stringBuilder = new StringBuilder();
+
+
     public ArrayList<Character> database = new ArrayList<>();
     double x = 0;
 
@@ -157,7 +159,7 @@ public class Parser implements IParser {
         if (tokenizer == null) {
             throw new IOException("No open file.");
         }
-        return new AssignmentNode();
+        return new BlockNode();
     }
 
     @Override
@@ -171,47 +173,37 @@ public class Parser implements IParser {
 
         StatementNode stmnt = null;
 
-        public BlockNode(Tokenizer P_Tokenizer) throws IOException, TokenizerException {
-            if (P_Tokenizer.current().token() == Token.LEFT_CURLY) {
-                while (P_Tokenizer.current().token() != Token.RIGHT_CURLY) {
-                    P_Tokenizer.moveNext();
-                    stmnt = new StatementNode(P_Tokenizer);
-                }
-            }
-        }
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            if(flag = true){
 
+                return eval();
+
+            }
             return null;
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) {
-            add_indents(tabs);
-            builder.append(builder + "\n");
+        public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
+            builder.append("BlockNode\n");
+            tabs +=1;
+            if (tokenizer.current().token() == Token.LEFT_CURLY) {
+                builder.append(tokenizer.current().toString());
+                tokenizer.moveNext();
+                stmnt = new StatementNode();
+                stmnt.buildString(builder, (tabs+1));
+                builder.append(tokenizer.current().toString());
+            } else {throw new TokenizerException("Error: No left curl");}
+            flag = true;
         }
+
     }
 
     class StatementNode implements INode {
 
         AssignmentNode assignmentNode = null;
-        // can go back to Statement node again
         StatementNode stmt = null;
-
-
-        public StatementNode(Tokenizer P_Tokenizer) {
-
-            /***
-             * go through the string and find the = symbol
-             *  if found move next and
-             * */
-            // assignmentNode = new AssignmentNode(P_Tokenizer);
-            if (P_Tokenizer.current().token() != Token.EOF) {
-                stmt = new StatementNode(P_Tokenizer);
-            }
-
-        }
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
@@ -219,8 +211,15 @@ public class Parser implements IParser {
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) {
-
+        public void buildString(StringBuilder builder, int tabs) throws IOException, ParserException, TokenizerException {
+            builder.append(add_indents(tabs-1) + "StatementNode\n");
+            if(tokenizer.current().token() == Token.IDENT){
+                assignmentNode = new AssignmentNode();
+                assignmentNode.buildString(builder, (tabs+1));
+                tokenizer.moveNext();
+                stmt = new StatementNode();
+                stmt.buildString(builder, (tabs+1));
+            }
         }
     }
 
@@ -234,21 +233,28 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            return null;
 
-            if(flag = true){
 
-                return eval();
+
+
+        /*    int i =0;
+            while(tokenizer.current().token() != Token.EOF){
+                if(tokenizer.current().token() != Token.IDENT && tokenizer.current().token() != Token.ASSIGN_OP && tokenizer.current().token() != Token.SEMICOLON){
+                    data[i] = tokenizer.current().toString();
+                    i++;
+                }
 
             }
+            ex.evaluate(data); */
 
-            return null;
         }
 
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
-            builder.append("AssigmentNode\n");
-            tabs += 1;
+            builder.append(add_indents(tabs-1)+"AssigmentNode\n");
+           // tabs += 1;
             if (tokenizer.current().token() == Token.IDENT) {
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
@@ -259,8 +265,8 @@ public class Parser implements IParser {
                     ex.buildString(builder, (tabs + 1));
                     if (tokenizer.current().token() == Token.SEMICOLON) {
                         builder.append(add_indents(tabs) + tokenizer.current().toString());
-                        stringBuilder.append(builder);
-                        flag= true;
+                       // stringBuilder.append(builder);
+                       // flag= true;
 
 
 
@@ -285,7 +291,7 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-
+            Object[] temparr = args;
             termNode.evaluate(data);
             return null;
         }

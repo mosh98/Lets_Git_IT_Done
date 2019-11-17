@@ -31,6 +31,5 @@ AssigmentNode
 						INT_LIT 5.0 
 	SEMICOLON ; 
 
-1.8
 EVALUATION:
-null
+1.8
