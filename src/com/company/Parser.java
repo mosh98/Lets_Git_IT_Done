@@ -213,8 +213,9 @@ public class Parser implements IParser {
             if(assignmentNode != null){
                 assignmentNode.evaluate(data);
             }
-            stmt.evaluate(data);
-
+            if(stmt != null) {
+                stmt.evaluate(data);
+            }
             return null;
         }
 
@@ -244,6 +245,7 @@ public class Parser implements IParser {
 
             ex.evaluate(data);
             variables.put(ident,(double)data[0]);
+            counter =0;
             return null;
 
 
@@ -266,7 +268,7 @@ public class Parser implements IParser {
             builder.append(add_indents(tabs-1)+"AssigmentNode\n");
            // tabs += 1;
             if (tokenizer.current().token() == Token.IDENT) {
-               ident = (char)tokenizer.current().value();
+               ident = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 if (tokenizer.current().token() == Token.ASSIGN_OP) {
@@ -418,7 +420,7 @@ public class Parser implements IParser {
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.IDENT) {
-                var = (char)tokenizer.current().value();
+                var = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.LEFT_PAREN) {
