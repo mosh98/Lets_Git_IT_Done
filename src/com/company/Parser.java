@@ -10,6 +10,9 @@ public class Parser implements IParser {
 
     public Tokenizer tokenizer = null;
 
+    int counter = 0;
+
+
     public Object[] data = new Object[10];
 
     public boolean flag = false;
@@ -159,7 +162,7 @@ public class Parser implements IParser {
         if (tokenizer == null) {
             throw new IOException("No open file.");
         }
-        return new BlockNode();
+        return new AssignmentNode();
     }
 
     @Override
@@ -195,7 +198,7 @@ public class Parser implements IParser {
                 stmnt.buildString(builder, (tabs+1));
                 builder.append(tokenizer.current().toString());
             } else {throw new TokenizerException("Error: No left curl");}
-            flag = true;
+           // flag = true;
         }
 
     }
@@ -207,6 +210,9 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            if(assignmentNode != null){
+                stmt = new StatementNode();
+            }
             return null;
         }
 
@@ -233,8 +239,11 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            return null;
-
+            if(ex != null){
+                ex.evaluate(data);
+                return data[0];
+            }
+            return "Hellloooo";
 
 
 
@@ -266,7 +275,7 @@ public class Parser implements IParser {
                     if (tokenizer.current().token() == Token.SEMICOLON) {
                         builder.append(add_indents(tabs) + tokenizer.current().toString());
                        // stringBuilder.append(builder);
-                       // flag= true;
+                        flag= true;
 
 
 
@@ -288,11 +297,22 @@ public class Parser implements IParser {
         TermNode termNode = null;
         ExpressionNode en = null;
         Tokenizer token = tokenizer;
+        char operator = ',';
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            Object[] temparr = args;
-            termNode.evaluate(data);
+            if(en !=null){
+                en.evaluate(args);
+            }
+            termNode.evaluate(args);
+            if(operator == '+'){
+                args[counter-2] = (double)args[counter-1] + (double)args[counter-2];
+                counter--;
+            }
+            else if(operator == '-'){
+                args[counter-2] = (double)args[counter-1] - (double)args[counter-2];
+                counter--;
+            }
             return null;
         }
 
@@ -302,11 +322,13 @@ public class Parser implements IParser {
             termNode = new TermNode();
             termNode.buildString(builder, (tabs + 1));
             if (tokenizer.current().token() == Token.ADD_OP) {
+                operator = '+';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 en = new ExpressionNode();
                 en.buildString(builder, tabs + 1);
             } else if (tokenizer.current().token() == Token.SUB_OP) {
+                operator ='-';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 en = new ExpressionNode();
@@ -321,12 +343,24 @@ public class Parser implements IParser {
 
         TermNode tn = null;
 
+        char operator = ',';
+
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
 
-            fn.evaluate(data);
-            return null;
+            if(tn != null){
+                 tn.evaluate(args);
+            }
+            fn.evaluate(args);
+                if(operator == '*'){
+                    args[counter-2] = (double)args[counter-1] * (double)args[counter-2];
+                    counter--;
+                }else if(operator == '/'){
+                    args[counter-2] = (double)args[counter-1] / (double)args[counter-2];
+                    counter--;
+                }
+                return null;
         }
 
         @Override
@@ -335,11 +369,13 @@ public class Parser implements IParser {
             fn = new FactorNode();
             fn.buildString(builder, (tabs + 1));
             if (tokenizer.current().token() == Token.DIV_OP) {
+                operator = '/';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 tn = new TermNode();
                 tn.buildString(builder, (tabs + 1));
             } else if (tokenizer.current().token() == Token.MULT_OP) {
+                operator = '*';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 tn = new TermNode();
@@ -351,17 +387,25 @@ public class Parser implements IParser {
     class FactorNode implements INode {
 
         ExpressionNode ex = null;
-        boolean temp = true;
+        double num;
+        char var = ',';
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            while (temp) {
-                if (tokenizer.current().token() == Token.LEFT_PAREN) {
+                if(ex == null){
+                    if(var == ','){
+                        args[counter] = num;
+                        counter++;
+                        return num;
+                    }else{
 
+                        args[counter] = var;
+                        counter++;
+                        return var;
+                    }
                 }
-                tokenizer.moveNext();
-            }
-            return tokenizer.current().value();
+                ex.evaluate(args);
+                return null;
         }
 
         @Override
@@ -369,9 +413,11 @@ public class Parser implements IParser {
             builder.append(add_indents(tabs - 1) + "FactorNode\n");
 
             if (tokenizer.current().token() == Token.INT_LIT) {
+                num = (double)tokenizer.current().value();
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.IDENT) {
+                var = (char)tokenizer.current().value();
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.LEFT_PAREN) {
