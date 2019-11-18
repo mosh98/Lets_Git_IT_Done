@@ -1,10 +1,13 @@
 package com.company;
 
+import org.w3c.dom.Node;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Parser implements IParser {
 
@@ -18,7 +21,7 @@ public class Parser implements IParser {
     public boolean flag = false;
 
     public StringBuilder stringBuilder = new StringBuilder();
-
+    public HashMap<Character,Double> variables = new HashMap<>();
 
     public ArrayList<Character> database = new ArrayList<>();
     double x = 0;
@@ -162,7 +165,7 @@ public class Parser implements IParser {
         if (tokenizer == null) {
             throw new IOException("No open file.");
         }
-        return new AssignmentNode();
+        return new BlockNode();
     }
 
     @Override
@@ -179,12 +182,9 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            if(flag = true){
+            stmnt.evaluate(data);
 
-                return eval();
-
-            }
-            return null;
+            return variables;
         }
 
         @Override
@@ -211,8 +211,10 @@ public class Parser implements IParser {
         @Override
         public Object evaluate(Object[] args) throws Exception {
             if(assignmentNode != null){
-                stmt = new StatementNode();
+                assignmentNode.evaluate(data);
             }
+            stmt.evaluate(data);
+
             return null;
         }
 
@@ -235,15 +237,14 @@ public class Parser implements IParser {
 
         ExpressionNode ex = null;
         String lexeme = null;
-
+        char ident = ',';
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            if(ex != null){
-                ex.evaluate(data);
-                return data[0];
-            }
-            return "Hellloooo";
+
+            ex.evaluate(data);
+            variables.put(ident,(double)data[0]);
+            return null;
 
 
 
@@ -265,6 +266,7 @@ public class Parser implements IParser {
             builder.append(add_indents(tabs-1)+"AssigmentNode\n");
            // tabs += 1;
             if (tokenizer.current().token() == Token.IDENT) {
+               ident = (char)tokenizer.current().value();
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 if (tokenizer.current().token() == Token.ASSIGN_OP) {
@@ -398,8 +400,7 @@ public class Parser implements IParser {
                         counter++;
                         return num;
                     }else{
-
-                        args[counter] = var;
+                        args[counter] = variables.get(var);
                         counter++;
                         return var;
                     }
