@@ -8,6 +8,7 @@ import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
 
 public class Parser implements IParser {
 
@@ -15,6 +16,8 @@ public class Parser implements IParser {
 
     int counter = 0;
 
+    Stack<Character> opp = new Stack();
+    Stack operand = new Stack();
 
     public Object[] data = new Object[10];
 
@@ -182,7 +185,9 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+
             stmnt.evaluate(data);
+
 
             return variables;
         }
@@ -305,18 +310,35 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
+            termNode.evaluate(args);
+                if (!opp.isEmpty()) {
+                    if(opp.peek() == '('){
+                        opp.pop();
+                    }
+                    else if (opp.peek() == '+') {
+                        opp.pop();
+                        args[counter - 2] = (double) args[counter - 2] + (double) args[counter - 1];
+                        counter--;
+                    } else if (opp.peek() == '-') {
+                        opp.pop();
+                        args[counter - 2] = (double) args[counter - 2] - (double) args[counter - 1];
+                        counter--;
+                    }
+                    if(operator != ','){
+                    opp.push(operator);
+                    }
+                }else{
+                    if(operator !=','){
+                    opp.push(operator);
+                    }
+                }
+
             if(en !=null){
                 en.evaluate(args);
             }
-            termNode.evaluate(args);
-            if(operator == '+'){
-                args[counter-2] = (double)args[counter-1] + (double)args[counter-2];
-                counter--;
-            }
-            else if(operator == '-'){
-                args[counter-2] = (double)args[counter-1] - (double)args[counter-2];
-                counter--;
-            }
+
+
+
             return null;
         }
 
@@ -352,18 +374,30 @@ public class Parser implements IParser {
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-
-            if(tn != null){
-                 tn.evaluate(args);
-            }
             fn.evaluate(args);
-                if(operator == '*'){
-                    args[counter-2] = (double)args[counter-1] * (double)args[counter-2];
-                    counter--;
-                }else if(operator == '/'){
-                    args[counter-2] = (double)args[counter-1] / (double)args[counter-2];
-                    counter--;
+
+                if(!opp.isEmpty() && opp.peek() != '+' && opp.peek() != '-') {
+                    if (opp.peek() == '*') {
+                        opp.pop();
+                        args[counter - 2] = (double) args[counter - 2] * (double) args[counter - 1];
+                        counter--;
+                    } else if (opp.peek() == '/') {
+                        opp.pop();
+                        args[counter - 2] = (double) args[counter - 2] / (double) args[counter - 1];
+                        counter--;
+                    }
+                    if(operator != ','){
+                        opp.push(operator);
+                    }
+                }else{
+                    if(operator != ',') {
+                        opp.push(operator);
+                    }
                 }
+                if(tn != null){
+                   tn.evaluate(args);
+                }
+
                 return null;
         }
 
@@ -401,12 +435,14 @@ public class Parser implements IParser {
                         args[counter] = num;
                         counter++;
                         return num;
-                    }else{
+                    }
+                    else {
                         args[counter] = variables.get(var);
                         counter++;
                         return var;
                     }
                 }
+                opp.push('(');
                 ex.evaluate(args);
                 return null;
         }
@@ -424,6 +460,7 @@ public class Parser implements IParser {
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.LEFT_PAREN) {
+            //    var = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 ex = new ExpressionNode();
