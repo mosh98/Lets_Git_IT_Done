@@ -1,150 +1,16 @@
 package com.company;
 
-import org.w3c.dom.Node;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
 public class Parser implements IParser {
 
     public Tokenizer tokenizer = null;
-
-    int counter = 0;
-
-    Stack<Character> opp = new Stack();
-    Stack operand = new Stack();
-
     public Object[] data = new Object[10];
-
-    public boolean flag = false;
-
-    public StringBuilder stringBuilder = new StringBuilder();
-    public HashMap<Character,Double> variables = new HashMap<>();
-
-    public ArrayList<Character> database = new ArrayList<>();
-    double x = 0;
-
-    public double eval() {
-
-        if(flag = false){
-            return Double.parseDouble(null);
-        }
-
-        String tempString = stringBuilder.toString();
-
-        StringBuilder tempBuilder = new StringBuilder();
-        ArrayList<Character> tempArr = new ArrayList<>();
-
-        for (int i = 0; i < tempString.length(); i++) {
-            char thisChar = tempString.charAt(i);
-            if (Character.isDigit(thisChar)) {
-                tempArr.add(thisChar);
-            } else if (thisChar == '+') {
-                tempArr.add(thisChar);
-            } else if (thisChar == '-') {
-                tempArr.add(thisChar);
-            } else if (thisChar == '/') {
-                tempArr.add(thisChar);
-            } else if (thisChar == '*') {
-                tempArr.add(thisChar);
-            } else if (thisChar == '(') {
-                tempArr.add(thisChar);
-            } else if (thisChar == ')') {
-                tempArr.add(thisChar);
-            } else if (thisChar == '.') {
-                tempArr.add('.');
-            }
-
-        }
-        for (Character c : tempArr) {
-            tempBuilder.append(c);
-        }
-
-        String str = tempBuilder.toString();
-
-        return new Object() {
-            int pos = -1, ch;
-
-            void nextChar() {
-                ch = (++pos < str.length()) ? str.charAt(pos) : -1;
-            }
-
-            boolean eat(int charToEat) {
-                while (ch == ' ') nextChar();
-                if (ch == charToEat) {
-                    nextChar();
-                    return true;
-                }
-                return false;
-            }
-
-            double parse() {
-                nextChar();
-                double x = parseExpression();
-                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
-                return x;
-            }
-
-            // Grammar:
-            // expression = term | expression `+` term | expression `-` term
-            // term = factor | term `*` factor | term `/` factor
-            // factor = `+` factor | `-` factor | `(` expression `)`
-            //        | number | functionName factor | factor `^` factor
-
-            double parseExpression() {
-                double x = parseTerm();
-                for (;;) {
-                    if      (eat('+')) x += parseTerm(); // addition
-                    else if (eat('-')) x -= parseTerm(); // subtraction
-                    else return x;
-                }
-            }
-
-            double parseTerm() {
-                double x = parseFactor();
-                for (;;) {
-                    if      (eat('*')) x *= parseFactor(); // multiplication
-                    else if (eat('/')) x /= parseFactor(); // division
-                    else return x;
-                }
-            }
-
-            double parseFactor() {
-                if (eat('+')) return parseFactor(); // unary plus
-                if (eat('-')) return -parseFactor(); // unary minus
-
-                double x;
-                int startPos = this.pos;
-                if (eat('(')) { // parentheses
-                    x = parseExpression();
-                    eat(')');
-                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
-                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
-                    x = Double.parseDouble(str.substring(startPos, this.pos));
-                } else if (ch >= 'a' && ch <= 'z') { // functions
-                    while (ch >= 'a' && ch <= 'z') nextChar();
-                    String func = str.substring(startPos, this.pos);
-                    x = parseFactor();
-                    if (func.equals("sqrt")) x = Math.sqrt(x);
-                    else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
-                    else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
-                    else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
-                    else throw new RuntimeException("Unknown function: " + func);
-                } else {
-                    throw new RuntimeException("Unexpected: " + (char)ch);
-                }
-
-                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
-
-                return x;
-            }
-        }.parse();
-    }
+    public HashMap<Character, Double> variableMap = new HashMap<>();
+    int counter = 0;
+    Stack<Character> operatorStack = new Stack();
 
     public String add_indents(int tabs) {
         String BLACK_SPACE = "";
@@ -180,30 +46,33 @@ public class Parser implements IParser {
 
     class BlockNode implements INode {
 
-        StatementNode stmnt = null;
-
+        StatementNode stmntNode = null;
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
 
-            stmnt.evaluate(data);
+            stmntNode.evaluate(data);
+
+            StringBuilder sb = new StringBuilder();
+            variableMap.forEach((k,v) -> sb.append(k + " = " + v +"\n"));
 
 
-            return variables;
+            return sb;
         }
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
             builder.append("BlockNode\n");
-            tabs +=1;
+            tabs += 1;
             if (tokenizer.current().token() == Token.LEFT_CURLY) {
                 builder.append(tokenizer.current().toString());
                 tokenizer.moveNext();
-                stmnt = new StatementNode();
-                stmnt.buildString(builder, (tabs+1));
+                stmntNode = new StatementNode();
+                stmntNode.buildString(builder, (tabs + 1));
                 builder.append(tokenizer.current().toString());
-            } else {throw new TokenizerException("Error: No left curl");}
-           // flag = true;
+            } else {
+                throw new TokenizerException("Error: No left curl");
+            }
         }
 
     }
@@ -211,28 +80,28 @@ public class Parser implements IParser {
     class StatementNode implements INode {
 
         AssignmentNode assignmentNode = null;
-        StatementNode stmt = null;
+        StatementNode stmntNode = null;
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            if(assignmentNode != null){
+            if (assignmentNode != null) {
                 assignmentNode.evaluate(data);
             }
-            if(stmt != null) {
-                stmt.evaluate(data);
+            if (stmntNode != null) {
+                stmntNode.evaluate(data);
             }
             return null;
         }
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws IOException, ParserException, TokenizerException {
-            builder.append(add_indents(tabs-1) + "StatementNode\n");
-            if(tokenizer.current().token() == Token.IDENT){
+            builder.append(add_indents(tabs - 1) + "StatementNode\n");
+            if (tokenizer.current().token() == Token.IDENT) {
                 assignmentNode = new AssignmentNode();
-                assignmentNode.buildString(builder, (tabs+1));
+                assignmentNode.buildString(builder, (tabs + 1));
                 tokenizer.moveNext();
-                stmt = new StatementNode();
-                stmt.buildString(builder, (tabs+1));
+                stmntNode = new StatementNode();
+                stmntNode.buildString(builder, (tabs + 1));
             }
         }
     }
@@ -241,59 +110,38 @@ public class Parser implements IParser {
     class AssignmentNode implements INode {
 
 
-        ExpressionNode ex = null;
-        String lexeme = null;
-        char ident = ',';
+        ExpressionNode expressionNode = null;
+        char ident;
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
 
-            ex.evaluate(data);
-            variables.put(ident,(double)data[0]);
-            counter =0;
+            expressionNode.evaluate(data);
+            variableMap.put(ident, (double) data[0]);
+            counter = 0;
             return null;
-
-
-
-        /*    int i =0;
-            while(tokenizer.current().token() != Token.EOF){
-                if(tokenizer.current().token() != Token.IDENT && tokenizer.current().token() != Token.ASSIGN_OP && tokenizer.current().token() != Token.SEMICOLON){
-                    data[i] = tokenizer.current().toString();
-                    i++;
-                }
-
-            }
-            ex.evaluate(data); */
-
         }
 
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
-            builder.append(add_indents(tabs-1)+"AssigmentNode\n");
-           // tabs += 1;
+            builder.append(add_indents(tabs - 1) + "AssigmentNode\n");
             if (tokenizer.current().token() == Token.IDENT) {
-               ident = tokenizer.current().value().toString().charAt(0);
+                ident = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
                 if (tokenizer.current().token() == Token.ASSIGN_OP) {
                     builder.append(add_indents(tabs) + tokenizer.current().toString());
                     tokenizer.moveNext();
-                    ex = new ExpressionNode();
-                    ex.buildString(builder, (tabs + 1));
+                    expressionNode = new ExpressionNode();
+                    expressionNode.buildString(builder, (tabs + 1));
                     if (tokenizer.current().token() == Token.SEMICOLON) {
                         builder.append(add_indents(tabs) + tokenizer.current().toString());
-                       // stringBuilder.append(builder);
-                        flag= true;
-
-
-
-
                     } else {
                         throw new ParserException("Could not find a Semicolon");
                     }
                 } else {
-                    throw new ParserException("Could not find a Assign operatior");
+                    throw new ParserException("Could not find a Assign operator");
                 }
             } else {
                 throw new ParserException("Could not find Identifier");
@@ -304,40 +152,40 @@ public class Parser implements IParser {
     class ExpressionNode implements INode {
 
         TermNode termNode = null;
-        ExpressionNode en = null;
+        ExpressionNode expressionNode = null;
         Tokenizer token = tokenizer;
-        char operator = ',';
+        char operator = '!';
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
             termNode.evaluate(args);
-                if (!opp.isEmpty()) {
-                    if(opp.peek() == '('){
-                        opp.pop();
-                    }
-                    else if (opp.peek() == '+') {
-                        opp.pop();
-                        args[counter - 2] = (double) args[counter - 2] + (double) args[counter - 1];
-                        counter--;
-                    } else if (opp.peek() == '-') {
-                        opp.pop();
-                        args[counter - 2] = (double) args[counter - 2] - (double) args[counter - 1];
-                        counter--;
-                    }
-                    if(operator != ','){
-                    opp.push(operator);
-                    }
-                }else{
-                    if(operator !=','){
-                    opp.push(operator);
-                    }
-                }
 
-            if(en !=null){
-                en.evaluate(args);
+            //Checks if the Stack is empty
+            if (!operatorStack.isEmpty()) {
+
+                //Checks if there is a parenthesis, if there is it will remove it from the stack
+                if (operatorStack.peek() == '(') {
+                    operatorStack.pop();
+
+                } else if (operatorStack.peek() == '+') {
+                    operatorStack.pop();
+                    args[counter - 2] = (double) args[counter - 2] + (double) args[counter - 1];
+                    counter--;
+                } else if (operatorStack.peek() == '-') {
+                    operatorStack.pop();
+                    args[counter - 2] = (double) args[counter - 2] - (double) args[counter - 1];
+                    counter--;
+                }
+            }
+            //Check if this node has an operator, if it does it will add it to the stack
+            if (operator != '!') {
+                operatorStack.push(operator);
             }
 
-
+            //Checks if the there is a child expression Node, if there is it will calls it's evaluate method
+            if (expressionNode != null) {
+                expressionNode.evaluate(args);
+            }
 
             return null;
         }
@@ -351,100 +199,102 @@ public class Parser implements IParser {
                 operator = '+';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
-                en = new ExpressionNode();
-                en.buildString(builder, tabs + 1);
+                expressionNode = new ExpressionNode();
+                expressionNode.buildString(builder, tabs + 1);
             } else if (tokenizer.current().token() == Token.SUB_OP) {
-                operator ='-';
+                operator = '-';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
-                en = new ExpressionNode();
-                en.buildString(builder, tabs + 1);
+                expressionNode = new ExpressionNode();
+                expressionNode.buildString(builder, tabs + 1);
             }
         }
     }
 
     class TermNode implements INode {
 
-        FactorNode fn = null;
+        FactorNode factorNode = null;
 
-        TermNode tn = null;
+        TermNode termNode = null;
 
-        char operator = ',';
+        char operator = '!';
 
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-            fn.evaluate(args);
+            factorNode.evaluate(args);
 
-                if(!opp.isEmpty() && opp.peek() != '+' && opp.peek() != '-') {
-                    if (opp.peek() == '*') {
-                        opp.pop();
-                        args[counter - 2] = (double) args[counter - 2] * (double) args[counter - 1];
-                        counter--;
-                    } else if (opp.peek() == '/') {
-                        opp.pop();
-                        args[counter - 2] = (double) args[counter - 2] / (double) args[counter - 1];
-                        counter--;
-                    }
-                    if(operator != ','){
-                        opp.push(operator);
-                    }
-                }else{
-                    if(operator != ',') {
-                        opp.push(operator);
-                    }
-                }
-                if(tn != null){
-                   tn.evaluate(args);
+            //Checks if the stack is empty and if the top last operation was a + or -, if not if will proceed and do either multiplication or division operation.
+            if (!operatorStack.isEmpty() && operatorStack.peek() != '+' && operatorStack.peek() != '-') {
+                if (operatorStack.peek() == '*') {
+                    operatorStack.pop();
+                    args[counter - 2] = (double) args[counter - 2] * (double) args[counter - 1];
+                    counter--;
+                } else if (operatorStack.peek() == '/') {
+                    operatorStack.pop();
+                    args[counter - 2] = (double) args[counter - 2] / (double) args[counter - 1];
+                    counter--;
                 }
 
-                return null;
+            }
+            //Check if this node has an operator, if it does it will add it to the stack
+            if (operator != '!') {
+                operatorStack.push(operator);
+            }
+            //Checks if the there is a child expression Node, if there is it will calls it's evaluate method
+
+            if (termNode != null) {
+                termNode.evaluate(args);
+            }
+
+            return null;
         }
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
             builder.append(add_indents(tabs - 1) + "TermNode\n");
-            fn = new FactorNode();
-            fn.buildString(builder, (tabs + 1));
+            factorNode = new FactorNode();
+            factorNode.buildString(builder, (tabs + 1));
             if (tokenizer.current().token() == Token.DIV_OP) {
                 operator = '/';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
-                tn = new TermNode();
-                tn.buildString(builder, (tabs + 1));
+                termNode = new TermNode();
+                termNode.buildString(builder, (tabs + 1));
             } else if (tokenizer.current().token() == Token.MULT_OP) {
                 operator = '*';
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
-                tn = new TermNode();
-                tn.buildString(builder, tabs + 1);
+                termNode = new TermNode();
+                termNode.buildString(builder, tabs + 1);
             }
         }
     }
 
     class FactorNode implements INode {
 
-        ExpressionNode ex = null;
-        double num;
-        char var = ',';
+        ExpressionNode expressionNode = null;
+        double number;
+        char variable = '!';
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
-                if(ex == null){
-                    if(var == ','){
-                        args[counter] = num;
-                        counter++;
-                        return num;
-                    }
-                    else {
-                        args[counter] = variables.get(var);
-                        counter++;
-                        return var;
-                    }
+            if (expressionNode == null) {
+                if (variable == '!') {
+                    args[counter] = number;
+                    counter++;
+                    return number;
+                } else {
+                    args[counter] = variableMap.get(variable);
+                    counter++;
+                    return variable;
                 }
-                opp.push('(');
-                ex.evaluate(args);
-                return null;
+            }
+
+            //If expressionNode isn't null that means that there is a expression within parenthesis, so we add a parenthesis to the stack.
+            operatorStack.push('(');
+            expressionNode.evaluate(args);
+            return null;
         }
 
         @Override
@@ -452,28 +302,25 @@ public class Parser implements IParser {
             builder.append(add_indents(tabs - 1) + "FactorNode\n");
 
             if (tokenizer.current().token() == Token.INT_LIT) {
-                num = (double)tokenizer.current().value();
+                number = (double) tokenizer.current().value();
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.IDENT) {
-                var = tokenizer.current().value().toString().charAt(0);
+                variable = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
             } else if (tokenizer.current().token() == Token.LEFT_PAREN) {
-            //    var = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
                 tokenizer.moveNext();
-                ex = new ExpressionNode();
-                ex.buildString(builder, tabs + 1);
+                expressionNode = new ExpressionNode();
+                expressionNode.buildString(builder, tabs + 1);
                 if (tokenizer.current().token() == Token.RIGHT_PAREN) {
                     builder.append(add_indents(tabs) + tokenizer.current().toString());
                     tokenizer.moveNext();
                 } else {
-                    throw new TokenizerException("couldnt find right_paren");
+                    throw new TokenizerException("Error: Couldn't find right_paren");
                 }
             }
         }
     }
-
-
 }

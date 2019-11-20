@@ -19,6 +19,7 @@ public class Program {
 		}
 		OutputStreamWriter writer = new OutputStreamWriter(stream,"UTF-8");
 
+
 		try {
 			try {
 				/*if (args.length < 2)
@@ -32,7 +33,7 @@ public class Program {
 				builder = new StringBuilder();
 				builder.append("PARSE TREE:\n");
 				root.buildString(builder, 0);
-				builder.append("\nEVALUATION:t4sr\n");
+				builder.append("\nEVALUATION:r\n");
 				builder.append(root.evaluate(null));
 
 				stream = new FileOutputStream(outputFileName);
