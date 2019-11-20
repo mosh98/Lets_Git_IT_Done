@@ -1,6 +1,7 @@
 package com.company;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -54,9 +55,8 @@ public class Parser implements IParser {
             stmntNode.evaluate(data);
 
             StringBuilder sb = new StringBuilder();
-            variableMap.forEach((k,v) -> sb.append(k + " = " + v +"\n"));
-
-
+            DecimalFormat df = new DecimalFormat("#.#");
+            variableMap.forEach((k,v) -> sb.append(k + " = " + df.format(v) +"\n"));
             return sb;
         }
 
