@@ -33,8 +33,8 @@ public class Program {
 				builder = new StringBuilder();
 				builder.append("PARSE TREE:\n");
 				root.buildString(builder, 0);
-				builder.append("\nEVALUATION:r\n");
-				builder.append(root.evaluate(null));
+				builder.append("\nEVALUATION:\n");
+			//	builder.append(root.evaluate(null));
 
 				stream = new FileOutputStream(outputFileName);
 				writer = new OutputStreamWriter(stream);

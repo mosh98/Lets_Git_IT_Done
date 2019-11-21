@@ -12,7 +12,7 @@ public interface IParser {
 	/**
 	 * Parses a program from file returning a parse tree (the root node of a parse tree).
 	 */
-	INode parse() throws IOException, TokenizerException, ParserException;
+	INode parse() throws Exception;
 
 	/**
 	 * Closes the file and releases any system resources associated with it.

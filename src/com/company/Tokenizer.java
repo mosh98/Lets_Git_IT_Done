@@ -100,7 +100,7 @@ public class Tokenizer implements ITokenizer {
                 strBuilder.append(scanner.current());
                 scanner.moveNext();
             }
-            lexemeNumber = Double.valueOf(strBuilder.toString());
+            lexemeNumber = Double.valueOf( (strBuilder.toString()));
             return new Lexeme(lexemeNumber, Token.INT_LIT);
 
         } else if (Character.isLetter(ch)) {

@@ -1,9 +1,9 @@
 PARSE TREE:
 BlockNode
-LEFT_CURLY { 
+RIGHT_CURLY } 
 	StatementNode
 		AssigmentNode
-			IDENT a 
+			IDENT alda 
 			ASSIGN_OP = 
 			ExpressionNode
 				TermNode
@@ -27,15 +27,15 @@ LEFT_CURLY {
 									TermNode
 										FactorNode
 											INT_LIT 4.0 
-							RIGHT_PAREN ) 
+							RIGHT_PAREN )
 						DIV_OP / 
 						TermNode
 							FactorNode
 								INT_LIT 5.0 
-			SEMICOLON ; 
+			SEMICOLON ;
 		StatementNode
 			AssigmentNode
-				IDENT b 
+				IDENT bsdeas 
 				ASSIGN_OP = 
 				ExpressionNode
 					TermNode
@@ -64,10 +64,10 @@ LEFT_CURLY {
 										TermNode
 											FactorNode
 												INT_LIT 2.0 
-				SEMICOLON ; 
+				SEMICOLON ;
 			StatementNode
 				AssigmentNode
-					IDENT c 
+					IDENT ccdsfeae 
 					ASSIGN_OP = 
 					ExpressionNode
 						TermNode
@@ -78,11 +78,8 @@ LEFT_CURLY {
 							TermNode
 								FactorNode
 									IDENT a 
-					SEMICOLON ; 
+					SEMICOLON ;
 				StatementNode
 RIGHT_CURLY } 
 
-EVALUATION:r
-a = 1,8
-b = −0,2
-c = 1,6
+EVALUATION:

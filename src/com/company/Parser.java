@@ -1,5 +1,8 @@
 package com.company;
 
+import org.w3c.dom.Node;
+import org.w3c.dom.css.CSSFontFaceRule;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
@@ -7,9 +10,9 @@ import java.util.Stack;
 
 public class Parser implements IParser {
 
-    public Tokenizer tokenizer = null;
+    public Tokenizer t = null;
     public Object[] data = new Object[10];
-    public HashMap<Character, Double> variableMap = new HashMap<>();
+    public HashMap<String, Double> variableMap = new HashMap<>();
     int counter = 0;
     Stack<Character> operatorStack = new Stack();
 
@@ -23,16 +26,16 @@ public class Parser implements IParser {
 
     @Override
     public void open(String fileName) throws IOException, TokenizerException {
-        tokenizer = new Tokenizer();
-        tokenizer.open(fileName);
-        tokenizer.moveNext();
+        t = new Tokenizer();
+        t.open(fileName);
+        t.moveNext();
 
 
     }
 
     @Override
-    public INode parse() throws IOException, TokenizerException, ParserException {
-        if (tokenizer == null) {
+    public INode parse() throws Exception {
+        if (t == null) {
             throw new IOException("No open file.");
         }
         return new BlockNode();
@@ -40,19 +43,29 @@ public class Parser implements IParser {
 
     @Override
     public void close() throws IOException {
-        if (tokenizer != null)
-            tokenizer.close();
+        if (t != null)
+            t.close();
     }
 
 
     class BlockNode implements INode {
 
-        StatementNode stmntNode = null;
+        StatementNode statementNode = null;
+
+        BlockNode() throws Exception {
+            if (t.current().token() == Token.LEFT_CURLY) {
+                t.moveNext();
+                statementNode = new StatementNode(t);
+            } else {
+                throw new TokenizerException("Error: No left curl");
+            }
+        }
+
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
 
-            stmntNode.evaluate(data);
+            statementNode.evaluate(data);
 
             StringBuilder sb = new StringBuilder();
             DecimalFormat df = new DecimalFormat("#.#");
@@ -64,15 +77,25 @@ public class Parser implements IParser {
         public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
             builder.append("BlockNode\n");
             tabs += 1;
-            if (tokenizer.current().token() == Token.LEFT_CURLY) {
-                builder.append(tokenizer.current().toString());
-                tokenizer.moveNext();
-                stmntNode = new StatementNode();
-                stmntNode.buildString(builder, (tabs + 1));
-                builder.append(tokenizer.current().toString());
+            builder.append(t.current().toString());
+            statementNode.buildString(builder, (tabs + 1));
+            builder.append(t.current().toString());
+
+
+
+
+
+        /*    builder.append("BlockNode\n");
+            tabs += 1;
+            if (t.current().token() == Token.LEFT_CURLY) {
+                builder.append(t.current().toString());
+                t.moveNext();
+                statementNode = new StatementNode();
+                statementNode.buildString(builder, (tabs + 1));
+                builder.append(t.current().toString());
             } else {
                 throw new TokenizerException("Error: No left curl");
-            }
+            } */
         }
 
     }
@@ -81,6 +104,16 @@ public class Parser implements IParser {
 
         AssignmentNode assignmentNode = null;
         StatementNode stmntNode = null;
+
+        StatementNode(Tokenizer t) throws Exception {
+            if(t.current().token() == Token.IDENT){
+                assignmentNode = new AssignmentNode(t);
+                t.moveNext();
+                stmntNode = new StatementNode(t);
+            }
+        }
+
+
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
@@ -95,14 +128,22 @@ public class Parser implements IParser {
 
         @Override
         public void buildString(StringBuilder builder, int tabs) throws IOException, ParserException, TokenizerException {
-            builder.append(add_indents(tabs - 1) + "StatementNode\n");
-            if (tokenizer.current().token() == Token.IDENT) {
-                assignmentNode = new AssignmentNode();
-                assignmentNode.buildString(builder, (tabs + 1));
-                tokenizer.moveNext();
-                stmntNode = new StatementNode();
+            builder.append("\t".repeat(tabs - 1) + "StatementNode\n");
+            if(assignmentNode != null)
+                assignmentNode.buildString(builder, (tabs+1));
+            if(stmntNode != null) {
                 stmntNode.buildString(builder, (tabs + 1));
             }
+
+
+         /*   builder.append(add_indents(tabs - 1) + "StatementNode\n");
+            if (t.current().token() == Token.IDENT) {
+                assignmentNode = new AssignmentNode();
+                assignmentNode.buildString(builder, (tabs + 1));
+                t.moveNext();
+                stmntNode = new StatementNode();
+                stmntNode.buildString(builder, (tabs + 1));
+            } */
         }
     }
 
@@ -111,21 +152,54 @@ public class Parser implements IParser {
 
 
         ExpressionNode expressionNode = null;
-        char ident;
+        Lexeme identNode;
+        Lexeme assignNode;
+        String ident;
+
+        AssignmentNode(Tokenizer t) throws Exception {
+            if (t.current().token() == Token.IDENT) {
+                ident = t.current().value().toString();
+                identNode = t.current();
+                t.moveNext();
+                if (t.current().token() == Token.ASSIGN_OP) {
+                    assignNode = t.current();
+                    t.moveNext();
+                    expressionNode = new ExpressionNode(t);
+                    if (t.current().token() != Token.SEMICOLON) {
+                        throw new ParserException("Could not find a Semicolon");
+                    }
+                } else {
+                    throw new ParserException("Could not find a Assign operator");
+                }
+            } else {
+                throw new ParserException("Could not find Identifier");
+            }
+        }
+
 
         @Override
         public Object evaluate(Object[] args) throws Exception {
 
             expressionNode.evaluate(data);
-            variableMap.put(ident, (double) data[0]);
+            if(ident != null)
+                variableMap.put(ident, (double) data[0]);
             counter = 0;
             return null;
         }
 
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) throws TokenizerException, ParserException, IOException {
-            builder.append(add_indents(tabs - 1) + "AssigmentNode\n");
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException, ParserException {
+            builder.append("\t".repeat(tabs - 1) + "AssigmentNode\n");
+            builder.append("\t".repeat(tabs) + identNode);
+            builder.append("\t".repeat(tabs) + assignNode);
+            expressionNode.buildString(builder, (tabs+1));
+            builder.append("\t".repeat(tabs) + "SEMICOLON ;" + "\n");
+
+
+
+
+            /*builder.append(add_indents(tabs - 1) + "AssigmentNode\n");
             if (tokenizer.current().token() == Token.IDENT) {
                 ident = tokenizer.current().value().toString().charAt(0);
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
@@ -145,7 +219,7 @@ public class Parser implements IParser {
                 }
             } else {
                 throw new ParserException("Could not find Identifier");
-            }
+            } */
         }
     }
 
@@ -153,20 +227,41 @@ public class Parser implements IParser {
 
         TermNode termNode = null;
         ExpressionNode expressionNode = null;
-        Tokenizer token = tokenizer;
         char operator = '!';
+        Lexeme thisNode;
 
+        ExpressionNode(Tokenizer t) throws Exception, ParserException,TokenizerException,IOException{
+            termNode = new TermNode(t);
+            switch(t.current().token()) {
+                case ADD_OP:
+                    operator = '+';
+                    thisNode = t.current();
+                    t.moveNext();
+                    expressionNode = new ExpressionNode(t);
+                    break;
+                case SUB_OP:
+                    operator = '-';
+                    thisNode = t.current();
+                    t.moveNext();
+                    expressionNode = new ExpressionNode(t);
+                    break;
+            }
+        }
+
+
+        // This method wil first call it's child TermNode's evalutate method.
+        // Thereafter it will check if the operator stack is empty or not.
+        // If it's empty then it means
         @Override
         public Object evaluate(Object[] args) throws Exception {
             termNode.evaluate(args);
 
-            //Checks if the Stack is empty
+            //Checks if the Stack is empty, if it's not that means that there is a
             if (!operatorStack.isEmpty()) {
 
                 //Checks if there is a parenthesis, if there is it will remove it from the stack
                 if (operatorStack.peek() == '(') {
                     operatorStack.pop();
-
                 } else if (operatorStack.peek() == '+') {
                     operatorStack.pop();
                     args[counter - 2] = (double) args[counter - 2] + (double) args[counter - 1];
@@ -191,7 +286,21 @@ public class Parser implements IParser {
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException, ParserException {
+            builder.append("\t".repeat(tabs-1) + "ExpressionNode\n");
+            termNode.buildString(builder, (tabs + 1));
+            if(expressionNode != null){
+                builder.append("\t".repeat(tabs)+ thisNode.toString());
+                expressionNode.buildString(builder, tabs+1);
+            }
+
+
+
+
+
+
+
+            /*
             builder.append(add_indents(tabs - 1) + "ExpressionNode\n");
             termNode = new TermNode();
             termNode.buildString(builder, (tabs + 1));
@@ -207,7 +316,7 @@ public class Parser implements IParser {
                 tokenizer.moveNext();
                 expressionNode = new ExpressionNode();
                 expressionNode.buildString(builder, tabs + 1);
-            }
+            } */
         }
     }
 
@@ -217,7 +326,28 @@ public class Parser implements IParser {
 
         TermNode termNode = null;
 
+        Lexeme thisNode = null;
+
         char operator = '!';
+
+
+        TermNode(Tokenizer t) throws Exception, ParserException, TokenizerException, IOException{
+            factorNode = new FactorNode(t);
+            switch(t.current().token()) {
+                case DIV_OP:
+                    thisNode = t.current();
+                    operator = '/';
+                    t.moveNext();
+                    termNode = new TermNode(t);
+                    break;
+                case MULT_OP:
+                    thisNode = t.current();
+                    operator = '*';
+                    t.moveNext();
+                    termNode = new TermNode(t);
+                    break;
+            }
+        }
 
 
         @Override
@@ -251,7 +381,23 @@ public class Parser implements IParser {
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException, ParserException {
+            builder.append("\t".repeat(tabs - 1) + "TermNode\n");
+            factorNode.buildString(builder, (tabs+1));
+            if(termNode != null){
+                builder.append("\t".repeat(tabs)+thisNode.toString());
+                termNode.buildString(builder,tabs+1);
+            }
+
+
+
+
+
+
+
+
+
+/*
             builder.append(add_indents(tabs - 1) + "TermNode\n");
             factorNode = new FactorNode();
             factorNode.buildString(builder, (tabs + 1));
@@ -267,7 +413,7 @@ public class Parser implements IParser {
                 tokenizer.moveNext();
                 termNode = new TermNode();
                 termNode.buildString(builder, tabs + 1);
-            }
+            }  */
         }
     }
 
@@ -275,17 +421,43 @@ public class Parser implements IParser {
 
         ExpressionNode expressionNode = null;
         double number;
-        char variable = '!';
+        String variable;
+        Lexeme thisNode = null;
 
+        FactorNode(Tokenizer t) throws Exception {
+            switch(t.current().token()) {
+                case INT_LIT:
+                    thisNode = t.current();
+                    number = (double)t.current().value();
+                    t.moveNext();
+                    break;
+                case IDENT:
+                    thisNode = t.current();
+                    System.out.println(t.current());
+                    variable = t.current().value().toString();
+                    t.moveNext();
+                    break;
+                case LEFT_PAREN:
+                    thisNode = t.current();
+                    t.moveNext();
+                    expressionNode = new ExpressionNode(t);
+                    if(t.current().token() == Token.RIGHT_PAREN){
+                        t.moveNext();
+                    }else {throw new ParserException("There is no ')' after an Expression!");}
+                    break;
+            }
+        }
         @Override
         public Object evaluate(Object[] args) throws Exception {
             if (expressionNode == null) {
-                if (variable == '!') {
+                if (variable == null) {
                     args[counter] = number;
                     counter++;
                     return number;
                 } else {
                     args[counter] = variableMap.get(variable);
+
+
                     counter++;
                     return variable;
                 }
@@ -298,9 +470,24 @@ public class Parser implements IParser {
         }
 
         @Override
-        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException {
-            builder.append(add_indents(tabs - 1) + "FactorNode\n");
+        public void buildString(StringBuilder builder, int tabs) throws IOException, TokenizerException, ParserException {
+          builder.append("\t".repeat(tabs-1) + "FactorNode\n");
+          switch(thisNode.token()){
+              case LEFT_PAREN:
+                  builder.append("\t".repeat(tabs) + thisNode.toString() );
+                  expressionNode.buildString(builder,(tabs+1));
+                  builder.append("\t".repeat(tabs) + "RIGHT_PAREN )\n");
+                  break;
+              default:
+                  builder.append("\t".repeat(tabs) + thisNode.toString());
+                  break;
 
+
+          }
+
+
+
+         /*   builder.append(add_indents(tabs - 1) + "FactorNode\n");
             if (tokenizer.current().token() == Token.INT_LIT) {
                 number = (double) tokenizer.current().value();
                 builder.append(add_indents(tabs) + tokenizer.current().toString());
@@ -320,7 +507,7 @@ public class Parser implements IParser {
                 } else {
                     throw new TokenizerException("Error: Couldn't find right_paren");
                 }
-            }
+            } */
         }
     }
 }
